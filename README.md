@@ -19,3 +19,5 @@ part2
 
 the submission link i used : 
 <https://studies.cs.helsinki.fi/stats/courses/fullstackopen/submissions>
+the exmple-github repo i need to follow :
+<https://github.com/fullstack-hy2020/example-submission-repository>
