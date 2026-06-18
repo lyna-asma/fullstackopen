@@ -14,3 +14,8 @@ part2
   countries
 
 ```
+
+
+
+the submission link i used : 
+<https://studies.cs.helsinki.fi/stats/courses/fullstackopen/submissions>
