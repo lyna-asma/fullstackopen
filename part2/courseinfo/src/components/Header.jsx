@@ -1,5 +1,6 @@
 
-const Header = (name) => {
+const Header = ({name}) => {
+  console.log('here is |Header| props', {name} );
   return (
 <h1>{name}</h1>
   )

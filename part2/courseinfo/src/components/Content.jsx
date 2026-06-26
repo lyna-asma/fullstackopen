@@ -1,11 +1,12 @@
 
-import { Part } from "./component/Part";
+import  Part  from "./Part";
 
-const Content = (content) => {
+const Content = ({content}) => {
+  console.log('here is |Content| props', {content} );
   return (
-        <ul>
+        <div>
             {content.map(part => <Part key={part.id} part= {part}></Part>)}
-        </ul>
+        </div>
       )
 }
 

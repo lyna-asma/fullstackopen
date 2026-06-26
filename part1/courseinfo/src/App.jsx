@@ -11,6 +11,7 @@ const Header = (props) => {
 
 //part component
 const Part = (props) => {
+  
   console.log('Part component is rendering...')
   console.log(props)
   return (
