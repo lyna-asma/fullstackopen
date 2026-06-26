@@ -1,6 +1,6 @@
 
 import Course from "./components/Course";
-import Total from './components/Total';
+
 
 
 const App = () => {
@@ -50,6 +50,7 @@ const App = () => {
   ]
   return (
     <div>
+      <h1>Web Dev Curriculum</h1>
       {courses.map(course =>
         <Course key={course.id} course={course} />
       )}

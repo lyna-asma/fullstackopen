@@ -1,0 +1,251 @@
+
+
+================================================================================
+FILE: C:\Users\lyna\Desktop\Fullstackopen-course\fullstackopen\part2\courseinfo\src\App.jsx
+================================================================================
+
+import Course from "./components/Course";
+import Total from './components/Total';
+
+
+const App = () => {
+  const courses = [
+    {
+      name: 'Half Stack application development',
+      id: 1,
+      parts: [
+        {
+          name: 'Fundamentals of React',
+          exercises: 10,
+          id: 1
+        },
+        {
+          name: 'Using props to pass data',
+          exercises: 7,
+          id: 2
+        },
+        {
+          name: 'State of a component',
+          exercises: 14,
+          id: 3
+        },
+        {
+          name: 'Redux',
+          exercises: 11,
+          id: 4
+        }
+      ]
+    },
+    {
+      name: 'Node.js',
+      id: 2,
+      parts: [
+        {
+          name: 'Routing',
+          exercises: 3,
+          id: 1
+        },
+        {
+          name: 'Middlewares',
+          exercises: 7,
+          id: 2
+        }
+      ]
+    }
+  ]
+  return (
+    <div>
+      <h1>Web Dev Curriculum</h1>
+      {courses.map(course =>
+        <Course key={course.id} course={course} />
+      )}
+    </div>
+  )
+
+}
+
+export default App
+
+================================================================================
+FILE: C:\Users\lyna\Desktop\Fullstackopen-course\fullstackopen\part2\courseinfo\src\components\Content.jsx
+================================================================================
+
+import  Part  from "./Part";
+
+const Content = ({content}) => {
+  console.log('here is |Content| props', {content} );
+  return (
+        <div>
+            {content.map(part => <Part key={part.id} part= {part}></Part>)}
+        </div>
+      )
+}
+
+export default Content
+
+================================================================================
+FILE: C:\Users\lyna\Desktop\Fullstackopen-course\fullstackopen\part2\courseinfo\src\components\Course.jsx
+================================================================================
+import  Content from "./Content";
+import  Header  from "./Header";
+import Total from './Total';
+
+const Course = ({ course }) => {
+    console.log("here is |Course| props", {course} );
+    
+    return (
+        <div>
+            <Header name={course.name} > </Header>
+            <Content content={course.parts}></Content>
+            <Total parts={course.parts}></Total> 
+        </div>
+    )
+}
+
+export default Course
+
+================================================================================
+FILE: C:\Users\lyna\Desktop\Fullstackopen-course\fullstackopen\part2\courseinfo\src\components\Header.jsx
+================================================================================
+
+const Header = ({name}) => {
+  console.log('here is |Header| props', {name} );
+  return (
+<h2>{name}</h2>
+  )
+}
+
+export default Header
+
+================================================================================
+FILE: C:\Users\lyna\Desktop\Fullstackopen-course\fullstackopen\part2\courseinfo\src\components\Part.jsx
+================================================================================
+
+const Part = ({ part }) => {
+    console.log("here is |Part| props ", { part });
+
+    return (
+        
+        <p>{part.name}  {part.exercises}</p> 
+        
+    )
+}
+
+export default Part
+
+================================================================================
+FILE: C:\Users\lyna\Desktop\Fullstackopen-course\fullstackopen\part2\courseinfo\src\components\Total.jsx
+================================================================================
+
+
+const Total = ({ parts }) => {
+    console.log("here is |Total| props :", {parts});
+    
+    return (
+        <div>
+          <b> total of {parts.reduce(
+                (sum, part) => {
+                     console.log('reduce function is doing this =>', sum,part)
+                    return (sum + part.exercises)
+                },0
+            )} exercises</b>  
+            
+        </div>
+    )
+}
+
+export default Total
+
+================================================================================
+FILE: C:\Users\lyna\Desktop\Fullstackopen-course\fullstackopen\part2\courseinfo\src\gather.py
+================================================================================
+import os
+import sys
+import argparse
+from pathlib import Path
+
+CODE_EXTENSIONS = {
+    '.py', '.cs', '.js', '.ts', '.jsx', '.tsx', '.html', '.css', 
+    '.json', '.xml', '.yml', '.yaml', '.sql', '.sh', '.bat', '.ps1',
+    '.cpp', '.c', '.h', '.hpp', '.java', '.go', '.rs', '.swift',
+    '.kt', '.rb', '.php', '.md', '.txt', '.cfg', '.ini', '.env',
+    '.gitignore', '.dockerignore', '.puml'
+}
+
+EXCLUDE_DIRS = {
+    '__pycache__', '.git', '.venv', 'venv', 'env', 'node_modules',
+    '.idea', '.vscode', 'dist', 'build', 'target', '__MACOSX',
+    'lib', 'include', 'bin', 'obj', 'Library', 'Temp', 'Logs'
+}
+
+def should_include_file(file_path: Path) -> bool:
+    if file_path.stat().st_size > 1_000_000:
+        print(f"Skipping large file: {file_path} (>1 MB)")
+        return False
+    return file_path.suffix in CODE_EXTENSIONS
+
+def gather_files(root_dir: Path) -> list:
+    files = []
+    for root, dirs, filenames in os.walk(root_dir):
+        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
+        for filename in filenames:
+            file_path = Path(root) / filename
+            if should_include_file(file_path):
+                files.append(file_path)
+    return files
+
+def read_file_content(file_path: Path) -> str:
+    encodings = ['utf-8', 'latin-1', 'cp1252']
+    for enc in encodings:
+        try:
+            with open(file_path, 'r', encoding=enc) as f:
+                return f.read()
+        except UnicodeDecodeError:
+            continue
+    return f"[Binary or unreadable file: {file_path}]"
+
+def output_to_file(files: list, output_file: str) -> None:
+    with open(output_file, 'w', encoding='utf-8') as out:
+        for file_path in sorted(files):
+            rel_path = file_path.resolve()
+            out.write(f"\n\n{'='*80}\nFILE: {rel_path}\n{'='*80}\n")
+            try:
+                content = read_file_content(file_path)
+                out.write(content)
+            except Exception as e:
+                out.write(f"[ERROR reading file: {e}]")
+    print(f"Output written to {output_file}")
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("directory", nargs="?", default=".", help="Root directory to scan")
+    parser.add_argument("-o", "--output", default="code_dump.txt", help="Output file name")
+    args = parser.parse_args()
+
+    root = Path(args.directory).resolve()
+    if not root.is_dir():
+        print(f"Error: {root} is not a directory.")
+        sys.exit(1)
+
+    print(f"Scanning {root} ...")
+    files = gather_files(root)
+    print(f"Found {len(files)} files to include.")
+    if not files:
+        print("No matching files found.")
+        return
+
+    output_to_file(files, args.output)
+
+if __name__ == "__main__":
+    main()
+
+================================================================================
+FILE: C:\Users\lyna\Desktop\Fullstackopen-course\fullstackopen\part2\courseinfo\src\main.jsx
+================================================================================
+import ReactDOM from 'react-dom/client'
+import App from './App'
+
+
+
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />)
