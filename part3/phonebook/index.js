@@ -34,12 +34,13 @@ let persons=[
     }
 ]
 
-app.get('/', (request, response) => {
-  response.send('<h1>Hello World!</h1>')
+
+
+
+app.get('/api/persons', (request, response) => {
+
+  response.send(persons)
 })
-
-
-
 
 app.get('/api/persons/:id' , (request,response)=> {
     const id=request.params.id
