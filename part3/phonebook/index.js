@@ -39,10 +39,7 @@ app.get('/', (request, response) => {
 })
 
 
-app.get('/api/persons', (request, response) => {
 
-  response.send(persons)
-})
 
 app.get('/api/persons/:id' , (request,response)=> {
     const id=request.params.id
