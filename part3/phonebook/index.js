@@ -2,7 +2,9 @@ const express = require('express')
 const morgan = require('morgan')
 const app = express()
 app.use(express.json())
-app.use(morgan('tiny')) //method, URL, status code, response size, and response time.
+
+// custom us eof morgan instead of using the 'tiny ' style 
+
 morgan.token('body', (req) => {
   return JSON.stringify(req.body)
 })
