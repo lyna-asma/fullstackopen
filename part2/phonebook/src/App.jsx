@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import Person from './components/Person';
 import Filter from './components/Filter';
 import PersonForm from './components/PersonForm';
-import personService from './services/persons'
+import personService from './services/persons';
+import Notification from './components/Notification';
 const App = () => {
 
 
@@ -11,16 +12,16 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchFilter, setSearchFilter] = useState('')
-
+  const [errorMessage, setErrorMessage] = useState('some error happened...')
 
   // effect call
   useEffect(() => {
     console.log('effect')
-     personService
-     .getAll()
-     .then(returnedPersons => {
-      setPersons( returnedPersons)
-     })
+    personService
+      .getAll()
+      .then(returnedPersons => {
+        setPersons(returnedPersons)
+      })
   }, [])
 
 
@@ -34,64 +35,70 @@ const App = () => {
   const handleNumberChange = (event) => setNewNumber(event.target.value)
   const handleSearchFilterChange = (event) => setSearchFilter(event.target.value)
   const handleDelete = (id) => {
-  const person = persons.find(p => p.id === id)
-  if (window.confirm(`Delete ${person.name}?`)) {
-    personService
-      .remove(id)
-      .then(() => {
-        setPersons(persons.filter(p => p.id !== id))
-      })
+    const person = persons.find(p => p.id === id)
+    if (window.confirm(`Delete ${person.name}?`)) {
+      personService
+        .remove(id)
+        .then(() => {
+          setPersons(persons.filter(p => p.id !== id))
+        })
+    }
   }
-}
 
 
 
   // form submission event handler 
   const addPerson = (event) => {
-  event.preventDefault()
-  
-  const existingPerson = persons.find(person => person.name === newName)
-  
-  if (existingPerson) {
-    // Person already exists - ask to update
-    if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
-      const changedPerson = { ...existingPerson, number: newNumber }
-      
+    event.preventDefault()
+
+    const existingPerson = persons.find(person => person.name === newName)
+
+    if (existingPerson) {
+      // Person already exists - ask to update
+      if (window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+        const changedPerson = { ...existingPerson, number: newNumber }
+
+        personService
+          .update(existingPerson.id, changedPerson)
+          .then(returnedPerson => {
+            setPersons(persons.map(person =>
+              person.id !== existingPerson.id ? person : returnedPerson
+            ))
+            setNewName('')
+            setNewNumber('')
+          })
+          .catch(error => {
+            setErrorMessage(` Information of '${existingPerson.name}' has already been deleted from server`)
+            setTimeout(() => {
+              setErrorMessage(null)
+            }, 5000)
+            setPersons(persons.filter(p => p.id !== existingPerson.id))
+          })
+      }
+    } else {
+      // New person - add to phonebook
+      const newPersonObject = { name: newName, number: newNumber }
+
       personService
-        .update(existingPerson.id, changedPerson)
-        .then(returnedPerson => {
-          setPersons(persons.map(person => 
-            person.id !== existingPerson.id ? person : returnedPerson
-          ))
+        .create(newPersonObject)
+        .then(createdPerson => {
+          setPersons(persons.concat(createdPerson))
           setNewName('')
           setNewNumber('')
         })
         .catch(error => {
-          alert(`The person '${existingPerson.name}' was already deleted from server`)
-          setPersons(persons.filter(p => p.id !== existingPerson.id))
+          setErrorMessage('Failed to save person. Server might be down.')
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 5000)
         })
     }
-  } else {
-    // New person - add to phonebook
-    const newPersonObject = { name: newName, number: newNumber }
-    
-    personService
-      .create(newPersonObject)
-      .then(createdPerson => {
-        setPersons(persons.concat(createdPerson))
-        setNewName('')
-        setNewNumber('')
-      })
-      .catch(error => {
-        console.log("creation failed")
-      })
   }
-}
 
 
 
-// checking persons to show 
-const personsToShow = searchFilter === ''
+  // checking persons to show 
+  const personsToShow = searchFilter === ''
     ? persons
     : persons.filter(person =>
       person.name.toLowerCase().includes(searchFilter.toLowerCase())
@@ -100,6 +107,8 @@ const personsToShow = searchFilter === ''
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification errorMessage={errorMessage} />
+      <br />
 
       <Filter searchFilter={searchFilter} handleSearchFilterChange={handleSearchFilterChange} />
 
@@ -110,9 +119,10 @@ const personsToShow = searchFilter === ''
         handleNumberChange={handleNumberChange}
         addPerson={addPerson}
       />
+
       <h2>Numbers</h2>
       <ul>
-        {personsToShow.map(person => <Person key={person.id} person={person} handleDelete={handleDelete}/>)}
+        {personsToShow.map(person => <Person key={person.id} person={person} handleDelete={handleDelete} />)}
       </ul>
     </div>
   )

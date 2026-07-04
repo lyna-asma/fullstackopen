@@ -2,8 +2,11 @@ import axios from 'axios'
 const baseUrl = 'http://localhost:3001/persons'
 
 const getAll = () => {
+  const nonExistingPerson= {
+    name :"Bob" , number : "22" , id : "1000" 
+  }
   const request = axios.get(baseUrl)
-  return request.then(response => response.data)
+  return request.then(response => response.data.concat(nonExistingPerson))
 }
 
 const create = newObject => {
