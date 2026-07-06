@@ -27,45 +27,33 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :b
 
 // get all route handler using find method from mongo model Person
 // notice the persons we get are people , this matches the collection name mongo creates for convenience (plural of Person)
-app.get('/api/persons', (request, response) => {
-  Person.find({}).then(persons => {
-    console.log(persons)
-    response.json(persons)
-  })
+app.get('/api/persons', (request, response, next) => {
+  Person.find({})
+    .then(persons => {
+      response.json(persons)
+    })
+    .catch(error => next(error))
 })
 
 // create new person handler — notice the use of Person() constructor + save()
 // adapted to mongo from the previous array-based version
-app.post('/api/persons', (request, response) => {
-  const body = request.body  // extract the JSON body from the request
+app.post('/api/persons', (request, response, next) => {
+  const body = request.body
 
-  // validate — if name or number is missing, return 400 error
   if (!body.name || !body.number) {
     return response.status(400).json({ 
       error: 'name or number missing' 
     })
   }
 
-  // create a new Person document using the mongoose model
   const person = new Person({
     name: body.name,
     number: body.number
   })
 
-  // save to MongoDB — returns a promise
-  // once saved, send the saved person back as JSON response
-  person.save().then(savedPerson => {
-    response.json(savedPerson)
-  })
-})
-
-// delete handler with mongo model method
-// 2 successful cases: either delete when non-existent person id, or delete an existing one
-// both return 204 no content since the end state is the same — the person doesn't exist
-app.delete('/api/persons/:id', (request, response, next) => {
-  Person.findByIdAndDelete(request.params.id)
-    .then(result => {
-      response.status(204).end()
+  person.save()
+    .then(savedPerson => {
+      response.json(savedPerson)
     })
     .catch(error => next(error))
 })
