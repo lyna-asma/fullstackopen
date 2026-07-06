@@ -12,7 +12,7 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchFilter, setSearchFilter] = useState('')
-  const [errorMessage, setErrorMessage] = useState('some error happened...')
+  const [errorMessage, setErrorMessage] = useState(null)
 
   // effect call
   useEffect(() => {
@@ -68,7 +68,8 @@ const App = () => {
             setNewNumber('')
           })
           .catch(error => {
-            setErrorMessage(` Information of '${existingPerson.name}' has already been deleted from server`)
+            // displaying the error message from the backend
+          setErrorMessage(error.response.data.error)
             setTimeout(() => {
               setErrorMessage(null)
             }, 5000)
@@ -87,7 +88,8 @@ const App = () => {
           setNewNumber('')
         })
         .catch(error => {
-          setErrorMessage('Failed to save person. Server might be down.')
+            // displaying the error message from the backend
+          setErrorMessage(error.response.data.error)
           setTimeout(() => {
             setErrorMessage(null)
           }, 5000)
