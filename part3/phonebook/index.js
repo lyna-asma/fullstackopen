@@ -1,19 +1,32 @@
+// DNS fix for MongoDB Atlas connectivity issues on some networks
 require('dns').setServers(['8.8.8.8', '1.1.1.1'])
+// loading environment variables from .env file before anything else
 require('dotenv').config()
+// some important imports
 const express = require('express')
 const morgan = require('morgan')
+// importing the Person model from the models directory
 const Person = require('./models/person')
-const app = express()
-app.use(express.json())
-app.use(express.static('dist'))
-// custom us eof morgan instead of using the 'tiny ' style 
 
+// app instance creation
+const app = express()
+
+// json parser middleware for the req.body to be used
+app.use(express.json())
+// static middleware to display the frontend files from /dist directory
+app.use(express.static('dist'))
+
+// morgan for logging some details to console useful for debugging
+// notice we first add body token to the rest bcz it doesn t come by default 
 morgan.token('body', (req) => {
   return JSON.stringify(req.body)
 })
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 
-// get all req adapted to mongo
+// route handlers
+
+// get all route handler using find method from mongo model Person
+// notice the persons we get are people , this matches the collection name mongo creates for convenience (plural of Person)
 app.get('/api/persons', (request, response) => {
   Person.find({}).then(persons => {
     console.log(persons)
@@ -21,7 +34,8 @@ app.get('/api/persons', (request, response) => {
   })
 })
 
-// post req adapted to mongo
+// create new person handler — notice the use of Person() constructor + save()
+// adapted to mongo from the previous array-based version
 app.post('/api/persons', (request, response) => {
   const body = request.body  // extract the JSON body from the request
 
@@ -45,40 +59,95 @@ app.post('/api/persons', (request, response) => {
   })
 })
 
-/*
-app.get('/api/persons/:id' , (request,response)=> {
-    const id=request.params.id
-    const person = persons.find((person)=> person.id === id)
+// delete handler with mongo model method
+// 2 successful cases: either delete when non-existent person id, or delete an existing one
+// both return 204 no content since the end state is the same — the person doesn't exist
+app.delete('/api/persons/:id', (request, response, next) => {
+  Person.findByIdAndDelete(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
+})
 
-    if (person)
-    {
+// update handler with mongo model methods
+// notice the use of findById() + save() instead of findByIdAndUpdate()
+// this way mongoose validations run on the updated document
+app.put('/api/persons/:id', (request, response, next) => {
+  const { name, number } = request.body
+
+  Person.findById(request.params.id)
+    .then(person => {
+      if (!person) {
+        return response.status(404).end()
+      }
+
+      person.name = name
+      person.number = number
+
+      return person.save().then((updatedPerson) => {
+        response.json(updatedPerson)
+      })
+    })
+    .catch(error => next(error))
+})
+
+
+
+// get by id handler 
+app.get('/api/persons/:id', (request, response, next) => {
+  Person.findById(request.params.id)
+    .then(person => {
+      if (person) {
         response.json(person)
-    }
-    else {
+      } else {
         response.status(404).end()
-    }
+      }
+    })
+    .catch(error => next(error))
 })
 
-app.get('/info', (request, response) => {
-  const entriesCount = persons.length
-  const requestTime = new Date().toString()
-  
-  response.send(`
-    <p>Phonebook has info for ${entriesCount} people</p>
-    <p>${requestTime}</p>
-  `)
-})
-
-app.delete('/api/persons/:id', (request, response) => {
-  const id = request.params.id
-  persons = persons.filter(person => person.id !== id)
-
-  response.status(204).end()
+// get info page 
+app.get('/info', (request, response, next) => {
+  Person.countDocuments({})
+    .then(count => {
+      const requestTime = new Date().toString()
+      response.send(`
+        <p>Phonebook has info for ${count} people</p>
+        <p>${requestTime}</p>
+      `)
+    })
+    .catch(error => next(error))
 })
 
 
+// Before the last middleware => handler for requests with unknown endpoint
+// catches any route that doesn't match the defined ones above
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+// its use — must be after all routes, before error handler
+app.use(unknownEndpoint)
 
-*/
+/// last middleware => error handler
+// catches errors passed via next(error) from route handlers
+// handles CastError (malformed MongoDB id) with 400
+// passes everything else to the default Express error handler
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+
+  next(error)
+}
+// its use — must be the very last middleware loaded
+app.use(errorHandler)
+
+// laaast one of all => the built-in error handler from Express ....(no code for it)
+// .........
+
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
