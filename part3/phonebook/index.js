@@ -80,6 +80,16 @@ app.put('/api/persons/:id', (request, response, next) => {
     .catch(error => next(error))
 })
 
+// delete handler with mongo model method
+// 2 successful cases: either delete when non-existent person id, or delete an existing one
+// both return 204 no content since the end state is the same — the person doesn't exist
+app.delete('/api/persons/:id', (request, response, next) => {
+  Person.findByIdAndDelete(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
+})
 
 
 // get by id handler 
