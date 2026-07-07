@@ -17,7 +17,7 @@ app.use(express.json())
 app.use(express.static('dist'))
 
 // morgan for logging some details to console useful for debugging
-// notice we first add body token to the rest bcz it doesn t come by default 
+// notice we first add body token to the rest bcz it doesn t come by default
 morgan.token('body', (req) => {
   return JSON.stringify(req.body)
 })
@@ -85,14 +85,14 @@ app.put('/api/persons/:id', (request, response, next) => {
 // both return 204 no content since the end state is the same — the person doesn't exist
 app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndDelete(request.params.id)
-    .then(result => {
+    .then( () => {
       response.status(204).end()
     })
     .catch(error => next(error))
 })
 
 
-// get by id handler 
+// get by id handler
 app.get('/api/persons/:id', (request, response, next) => {
   Person.findById(request.params.id)
     .then(person => {
@@ -105,7 +105,7 @@ app.get('/api/persons/:id', (request, response, next) => {
     .catch(error => next(error))
 })
 
-// get info page 
+// get info page
 app.get('/info', (request, response, next) => {
   Person.countDocuments({})
     .then(count => {
@@ -137,9 +137,9 @@ const errorHandler = (error, request, response, next) => {
   if (error.name === 'CastError') {
     return response.status(400).send({ error: 'malformatted id' })
   }
-    if (error.name === 'ValidationError') {
-      return response.status(400).send({ error: error.message })
-    }
+  if (error.name === 'ValidationError') {
+    return response.status(400).send({ error: error.message })
+  }
 
   next(error)
 }

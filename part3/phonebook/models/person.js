@@ -9,7 +9,7 @@ const url = process.env.MONGODB_URI
 console.log('connecting to', url)
 mongoose.connect(url, { family: 4 })
 
-  .then(result => {
+  .then( () => {
     console.log('connected to MongoDB')
   })
   .catch(error => {
@@ -17,13 +17,13 @@ mongoose.connect(url, { family: 4 })
   })
 
 const personSchema = new mongoose.Schema({
-  // default mongoose validator is used 
+  // default mongoose validator is used
   name: {
     type: String,
     minlength: 3,
     required: true
   },
-  // custom mongoose validator is used 
+  // custom mongoose validator is used
   number: {
     type: String,
     validate: {
