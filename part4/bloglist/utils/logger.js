@@ -1,7 +1,9 @@
-//all the console.log into 2 methods , one for logging infos an one for logging errors
+// all the console.log into 2 methods, one for logging infos and one for logging errors
 
 const info = (...params) => {
-  console.log(...params)
+  if (process.env.NODE_ENV !== 'test') {
+    console.log(...params)
+  }
 }
 
 const error = (...params) => {
