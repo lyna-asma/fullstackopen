@@ -8,8 +8,13 @@ const config = require('./utils/config')
 // importing the logger to use info() and error() replacing console.log
 const logger = require('./utils/logger')
 const middleware = require('./utils/middleware')
-// noteRouter imports to get the route handlers (controller module) of notes instances
+// blogsRouter import to get the route handlers (controller module) of notes instances
 const blogsRouter = require('./controllers/blogs')
+// userRouter import
+const usersRouter = require('./controllers/users')
+// loginRouter import
+const loginRouter = require('./controllers/login')
+
 
 // app instance creation
 const app = express()
@@ -32,8 +37,18 @@ app.use(express.static('dist'))
 app.use(middleware.requestLogger)
 
 // route handlers
+
+// token first
+app.use(middleware.tokenExtractor)
 // all /api/notes routes are now handled by the notesRouter in controllers/notes.js
 app.use('/api/blogs', blogsRouter)
+
+// users router use
+app.use('/api/users', usersRouter)
+
+// login router
+app.use('/api/login', loginRouter)
+
 
 // before the last middleware => unknown endpoint handler (moved to utils/middleware)
 app.use(middleware.unknownEndpoint)

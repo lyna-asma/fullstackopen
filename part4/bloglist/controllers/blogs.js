@@ -1,16 +1,17 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
+const middleware = require('../utils/middleware')
 
-// GET all blogs
+// GET all blogs — public, no token needed
 blogsRouter.get('/', async (request, response) => {
-  const blogs = await Blog.find({})
+  const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 })
   response.json(blogs)
 })
 
-
-// POST new blog
-blogsRouter.post('/', async (request, response) => {
+// POST new blog — requires token, uses userExtractor
+blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
   const body = request.body
+  const user = request.user
 
   if (!body.title || !body.url) {
     return response.status(400).json({ error: 'title or url missing' })
@@ -21,49 +22,56 @@ blogsRouter.post('/', async (request, response) => {
     author: body.author,
     url: body.url,
     likes: body.likes || 0,
+    user: user._id,
   })
 
-  //save using async/await instead of .then()/.catch()
   const savedBlog = await blog.save()
-  // respond with 201 Created and the saved blog as JSON
+  user.blogs = user.blogs.concat(savedBlog._id)
+  await user.save()
+
   response.status(201).json(savedBlog)
 })
 
+// DELETE a blog by id — requires token, uses userExtractor, checks ownership
+blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
+  const user = request.user
 
-// DELETE a blog by id
-blogsRouter.delete('/:id', async (request, response) => {
+  const blog = await Blog.findById(request.params.id)
+  if (!blog) {
+    return response.status(404).end()
+  }
+
+  if (blog.user.toString() !== user._id.toString()) {
+    return response.status(401).json({ error: 'only the creator can delete this blog' })
+  }
+
   await Blog.findByIdAndDelete(request.params.id)
   response.status(204).end()
 })
 
-// UPDATE a blog by id
-blogsRouter.put('/:id', async (request, response) => {
+// UPDATE a blog by id — requires token, uses userExtractor, checks ownership
+blogsRouter.put('/:id', middleware.userExtractor, async (request, response) => {
   const body = request.body
-  const blog = {
+  const user = request.user
+
+  const blog = await Blog.findById(request.params.id)
+  if (!blog) {
+    return response.status(404).end()
+  }
+
+  if (blog.user.toString() !== user._id.toString()) {
+    return response.status(401).json({ error: 'only the creator can update this blog' })
+  }
+
+  const updatedFields = {
     title: body.title,
     author: body.author,
     url: body.url,
     likes: body.likes,
   }
 
-  const updatedBlog = await Blog.findByIdAndUpdate(
-    request.params.id,
-    blog,
-    { returnDocument: 'after' }
-    /*
-    { // to return the new object bcz result would still be holding the old one 
-      new: true,
-      // to run the validators of mongoDb s Blog schema , otherwise find would skip them 
-      runValidators: true, 
-      // to avoid conflicts with validators we precise to them tht it s about a query not a document instance operation
-      context: 'query' }
-      */
-  )
-
+  const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, updatedFields, { returnDocument: 'after' })
   response.json(updatedBlog)
 })
-
-
-
 
 module.exports = blogsRouter

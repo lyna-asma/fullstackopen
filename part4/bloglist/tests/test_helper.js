@@ -26,6 +26,15 @@ const Blog = require('../models/blog')
   return blogs.map(blog => blog.toJSON())
 }
 
+// creates a valid-format ObjectId that does NOT belong to any blog in the database
+// useful for testing 404 behavior on a well-formed but nonexistent id
+const nonExistingId = async () => {
+  const blog = new Blog({ title: 'willremovethissoon', author: 'x', url: 'http://x.com' })
+  await blog.save()
+  await blog.deleteOne()
+  return blog._id.toString()
+}
+
     module.exports = {
-  initialBlogs , blogsInDb
+  initialBlogs , blogsInDb , nonExistingId
 }

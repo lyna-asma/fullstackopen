@@ -1,7 +1,20 @@
 node_modules/
 .env
+.env.local
+.env.*.local
 .DS_Store
 *.log
+npm-debug.log*
 
+# build/dist output (if you ever build the frontend for this backend)
+dist/
+build/
+
+# editor/OS clutter
+.vscode/
+.idea/
+Thumbs.db
+
+# your dev tooling scripts, not part of the actual project
 gather.py
 code_dump.txt
