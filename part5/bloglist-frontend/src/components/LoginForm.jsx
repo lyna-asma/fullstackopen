@@ -1,31 +1,31 @@
-const LoginForm = ( {handleLogin , password ,handlePassword ,username , handleUsername}) => {
-
+const LoginForm = (props) => {
   return (
-<form onSubmit={handleLogin} >
-  <h2>Login to application</h2>
-      <div>
-        <label>
+    <div>
+      <h2>Login</h2>
+      <form onSubmit={props.handleLogin}>
+   <div>
+         <label>
           username
           <input
-            type="text"
-            value={username}
-            onChange={handleUsername}
+            value={props.username}
+            onChange={props.handleUsername}
+            name="username"
           />
         </label>
-      </div>
-   <div>
-        <label>
+   </div>
+         <div>
+          <label>
           password
           <input
-            type="password"
-            value={password}
-            // event.target is the specific DOM element that triggered the event — in this case, the exact <input> element
-            onChange={handlePassword}
+            value={props.password}
+            onChange={props.handlePassword}
+            name="password"
           />
         </label>
-      </div>
- <button type="submit" >login</button>
-</form>
+         </div>
+        <button type="submit">login</button>
+      </form>
+    </div>
   )
 }
 

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Notification from './components/Notification';
 import LoginForm from './components/LoginForm';
 import BlogForm from './components/BlogForm';
-
+import Togglable from './components/Togglable'
 
 const App = () => {
   // blog list state
@@ -19,19 +19,14 @@ const App = () => {
   // bcz we were asked for succss notif too not just error 
   const [notification, setNotification] = useState(null) // { message, type: 'success' | 'error' }
 
-
-  // BlogForm states
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [url, setUrl] = useState('')
-
   // EFFECT CALLS
 
   // 1 "blogs" effect
   useEffect(() => {
-    blogService.getAll().then(blogs =>
+    blogService.getAll().then(blogs => {
+      console.log('Blogs from backend:', blogs)  // Check what the ID field is called
       setBlogs(blogs)
-    )
+    })
   }, [])
 
   // 2 "login local storage of credentials in browser" effect 
@@ -65,7 +60,7 @@ const App = () => {
       setPassword('')
     } catch {
       // if any error occures we catch it and display the message for a short while
-     setNotification({ message: 'wrong credentials', type: 'error' })
+      setNotification({ message: 'wrong credentials', type: 'error' })
       setTimeout(() => {
         setNotification(null)
       }, 5000)
@@ -89,54 +84,70 @@ const App = () => {
     setUser(null)
   }
 
+  // blogForm event handlers
+  // 1 submission 
+  // we need REFS
+  const blogFormRef = useRef()
 
+  // App's addBlog — talks to the backend
+  const addBlog = async (blogObject) => {
+    try {
+      const returnedBlog = await blogService.create(blogObject)
+      setBlogs(blogs.concat(returnedBlog))
+      blogFormRef.current.toggleVisibility()
+      setNotification({ message: `a new blog ${returnedBlog.title} by ${returnedBlog.author} added`, type: 'success' })
+      setTimeout(() => setNotification(null), 5000)
+    } catch {
+      setNotification({ message: 'wrong information', type: 'error' })
+      setTimeout(() => setNotification(null), 5000)
+    }
+  }
 
-  // EVENT HANDLERS blogfrom
-  // 1 input feild change
-  const handleTitle = (event) => {
-    setTitle(event.target.value)
-  }
-  // 2 input feild change
-  const handleAuthor = (event) => {
-    setAuthor(event.target.value)
-  }
-  // 3 input feild change
-  const handleUrl = (event) => {
-    setUrl(event.target.value)
-  }
-  // 4 submission 
-
-  const addBlog = async (event) => {
-    event.preventDefault()
-    // taking the values from the state variables to create the blog with them
-    const blogObject = {
-      title,
-      author,
-      url,
+  // 2
+  const handleLike = async (blogToUpdate) => {
+    const updatedBlog = {
+      title: blogToUpdate.title,
+      author: blogToUpdate.author,
+      url: blogToUpdate.url,
+      likes: blogToUpdate.likes + 1,
+      user: blogToUpdate.user?.id || blogToUpdate.user
     }
 
     try {
-      // return the blog created after calling the service and sending the post request
-      const returnedBlog = await blogService.create(blogObject)
-      setBlogs(blogs.concat(returnedBlog))
-      setTitle('')
-      setAuthor('')
-      setUrl('')
-      // success notif 
-      setNotification({ message: `a new blog ${returnedBlog.title} by ${returnedBlog.author} added`, type: 'success' })
-      setTimeout(() => setNotification(null), 5000)
+      const returnedBlog = await blogService.update(blogToUpdate.id, updatedBlog)
 
-    } catch {
-      // display the error message
-      // faillure notif
-      setNotification({ message: 'wrong information', type: 'error' })
-      // errror is shown temporarily
+      setBlogs(blogs.map(blog =>
+        blog.id !== returnedBlog.id ? blog : returnedBlog
+      ))
+    } catch (error) {
+      console.error('Error updating likes:', error)
+      setNotification({ message: 'Failed to update likes', type: 'error' })
       setTimeout(() => setNotification(null), 5000)
     }
   }
 
+  // EVENT HANDLER DELETE
+  const handleDelete = async (blogToDelete) => {
+  if (!window.confirm(`Remove blog "${blogToDelete.title}" by ${blogToDelete.author}?`)) {
+    return
+  }
+
+  try {
+    await blogService.remove(blogToDelete.id)
+    setBlogs(blogs.filter(blog => blog.id !== blogToDelete.id))
+    setNotification({ message: `Blog "${blogToDelete.title}" deleted successfully`, type: 'success' })
+    setTimeout(() => setNotification(null), 5000)
+  } catch (error) {
+     console.error('Error deleting blog:', error)
+    setNotification({ message: 'Failed to delete blog', type: 'error' })
+    setTimeout(() => setNotification(null), 5000)
+  }
+}
+
+
   return (
     <div>
+
       <Notification notification={notification} />
 
       {!user && <LoginForm handleLogin={handleLogin} password={password} username={username} handlePassword={handlePassword} handleUsername={handleUsername} />}
@@ -146,10 +157,23 @@ const App = () => {
           <button onClick={handleLogout}>logout</button>
         </div>
       )}
-      <BlogForm addBlog={addBlog} title={title} author={author} url={url} handleAuthor={handleAuthor} handleTitle={handleTitle} handleUrl={handleUrl}></BlogForm>
-      <h2>Blogs list :</h2>
-      {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} />
+
+      {user && (
+        <Togglable buttonLabel="create new blog" ref={blogFormRef}>
+          <BlogForm createBlog={addBlog} />
+        </Togglable>
+      )}
+
+      {user && (
+        <>
+          <h2>Blogs list :</h2>
+          {[...blogs]
+            .sort((a, b) => b.likes - a.likes)
+            .map(blog =>
+              <Blog key={blog.id} blog={blog} handleLike={handleLike} handleDelete={handleDelete} currentUser={user}/>
+            )
+          }
+        </>
       )}
     </div>
   )
