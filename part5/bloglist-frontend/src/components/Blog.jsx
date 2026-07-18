@@ -39,13 +39,13 @@ const likeBlog = () => {
 
   return (
     <div style={blogStyle}>
-      <div>
+      <div >
         {blog.title} , written by , {blog.author}
         <button onClick={handleClick}>
           {visible ? 'hide' : 'view'}
         </button>
       </div>
-      <div style={showWhenVisible}>
+      <div style={showWhenVisible} className="togglableContent">
         <p>{blog.url}</p>
         <p>
           likes {blog.likes} 
