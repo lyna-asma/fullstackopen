@@ -49,6 +49,11 @@ app.use('/api/users', usersRouter)
 // login router
 app.use('/api/login', loginRouter)
 
+// for the E2E tests that require DB access and modification 
+if (process.env.NODE_ENV === 'test') {
+  const testingRouter = require('./controllers/testing')
+  app.use('/api/testing', testingRouter)
+}
 
 // before the last middleware => unknown endpoint handler (moved to utils/middleware)
 app.use(middleware.unknownEndpoint)

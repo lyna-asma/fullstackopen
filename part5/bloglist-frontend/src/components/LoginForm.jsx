@@ -1,7 +1,7 @@
 const LoginForm = (props) => {
   return (
     <div>
-      <h2>Login</h2>
+      <h2>Login to application</h2>
       <form onSubmit={props.handleLogin}>
    <div>
          <label>

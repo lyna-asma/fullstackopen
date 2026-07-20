@@ -38,7 +38,7 @@ const likeBlog = () => {
   }
 
   return (
-    <div style={blogStyle}>
+    <div className="blog" style={blogStyle}>
       <div >
         {blog.title} , written by , {blog.author}
         <button onClick={handleClick}>
