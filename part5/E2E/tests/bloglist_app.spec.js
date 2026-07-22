@@ -1,5 +1,5 @@
 const { test, expect, beforeEach, describe } = require('@playwright/test')
-const { loginWith, createBlog , likeBlog } = require('./helper')
+const { loginWith, createBlog, likeBlog } = require('./helper')
 
 describe('Blog app', () => {
     beforeEach(async ({ page, request }) => {
@@ -81,6 +81,10 @@ describe('Blog app', () => {
             await expect(page.locator('.blog', { hasText: 'Component testing is done with react-testing-library' })).not.toBeVisible()
         })
 
+
+
+
+
         test('blogs are ordered by likes, most liked first', async ({ page }) => {
             await createBlog(page, 'First blog', 'Author One', 'http://example.com/1')
             await createBlog(page, 'Second blog', 'Author Two', 'http://example.com/2')
@@ -95,18 +99,27 @@ describe('Blog app', () => {
 
             // 'First blog' stays at 0 likes
 
-            // reload so blogs re-fetch and re-sort from the backend, matching real usage
+            // reload so blogs re-fetch and re-sort from the backend
             await page.reload()
+            // Without this, the test might try to read blog elements before they're rendered.
+            // waits until at least one element with class blog is visible.
+            await page.locator('.blog').first().waitFor()
 
+            // Get all blog titles in order
+            // .allTextContents(): Returns an array of strings, where each string contains ALL text inside each blog element.
             const blogTitles = await page.locator('.blog').allTextContents()
 
-            // Second (2 likes) should come before Third (1 like), which comes before First (0 likes)
-            const secondIndex = blogTitles.findIndex(text => text.includes('Second blog'))
-            const thirdIndex = blogTitles.findIndex(text => text.includes('Third blog'))
-            const firstIndex = blogTitles.findIndex(text => text.includes('First blog'))
+            // Clean up the text to just get the title portion before ", written by"
+            const cleanedTitles = blogTitles.map(text => {
+                // Extract just the title part (before ", written by")
+                const match = text.match(/^([^,]+)/)
+                return match ? match[1].trim() : text
+            })
 
-            expect(secondIndex).toBeLessThan(thirdIndex)
-            expect(thirdIndex).toBeLessThan(firstIndex)
+            // Verify the titles are in correct order
+            expect(cleanedTitles[0]).toContain('Second blog')
+            expect(cleanedTitles[1]).toContain('Third blog')
+            expect(cleanedTitles[2]).toContain('First blog')
         })
     })
 
