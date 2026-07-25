@@ -1,39 +1,47 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import { Routes, Route, Link, Navigate, useMatch, useNavigate } from 'react-router-dom'
 import Blog from './components/Blog'
+import BlogList from './components/BlogList'
 import blogService from './services/blogs'
 import loginService from './services/login'
-import Notification from './components/Notification';
-import LoginForm from './components/LoginForm';
-import BlogForm from './components/BlogForm';
-import Togglable from './components/Togglable'
+import Notification from './components/Notification'
+import LoginForm from './components/LoginForm'
+import BlogForm from './components/BlogForm'
+
+// NOTE: there is NO <Router> here. The <Router> (BrowserRouter) lives in
+// main.jsx, wrapping <App />. Why: React Router's useMatch hook (used below)
+// cannot be called inside the same component that defines the <Routes>/<Route>
+// tree it's matching against - it needs to sit "outside" that tree, which
+// means Router has to be a level above App, not inside App.
+// If you put a second <Router> here too, you get NESTED routers, which React
+// Router does not support and will misbehave / throw.
 
 const App = () => {
-  // blog list state
+  // ---- STATE ----
+  // App is the single owner of all shared state: the blog list, the logged-in
+  // user, the login form fields, and the notification banner. Every route
+  // below is just a different "view" onto this same state - none of the
+  // child components (Blog, BlogForm, LoginForm) keep their own copy of it.
   const [blogs, setBlogs] = useState([])
-
-  // LoginForm states
   const [user, setUser] = useState(null)
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const [notification, setNotification] = useState(null)
 
-  // bcz we were asked for succss notif too not just error 
-  const [notification, setNotification] = useState(null) // { message, type: 'success' | 'error' }
+  // useNavigate() has to be called inside a component that's rendered
+  // BELOW the <Router> in main.jsx - which App is - so this works fine here.
+  const navigate = useNavigate()
 
-  // EFFECT CALLS
-
-  // 1 "blogs" effect
+  // Fetch all blogs once when the app first mounts (empty dependency array).
   useEffect(() => {
     blogService.getAll().then(blogs => {
-      console.log('Blogs from backend:', blogs)  // Check what the ID field is called
       setBlogs(blogs)
     })
   }, [])
 
-  // 2 "login local storage of credentials in browser" effect 
+  // On mount, check localStorage for a previously logged-in user, so a page
+  // refresh doesn't log the user out. Also re-attaches their token to the
+  // blogService module so authenticated requests (create/update/delete) work.
   useEffect(() => {
-    // storing in the browser the user info
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
-    // checking if there s any login info saved to parse when reloading the page
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
@@ -41,60 +49,43 @@ const App = () => {
     }
   }, [])
 
-  // EVENT HANDLERS login
-
-  // 1 sending the login request via the service , with the states values as credentials 
-  const handleLogin = async event => {
-    event.preventDefault()
-
+  // ---- LOGIN / LOGOUT ----
+  const handleLogin = async (username, password) => {
     try {
       const user = await loginService.login({ username, password })
-      // saving the user login info in the browser 
-      // we can find them by pressign in the console : "loggedBlogUser" , we can clear the local storage or just remove this specific variable from it
       window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
-      // set the user token for any future queries from the blogs service that require a token (authentication-based)
       blogService.setToken(user.token)
       setUser(user)
-      // epty the input feilds again
-      setUsername('')
-      setPassword('')
+      // No explicit navigate() call is needed here: once `user` becomes
+      // truthy, the "/login" route below re-renders and its own element
+      // becomes <Navigate replace to="/" />, which redirects automatically.
     } catch {
-      // if any error occures we catch it and display the message for a short while
       setNotification({ message: 'wrong credentials', type: 'error' })
-      setTimeout(() => {
-        setNotification(null)
-      }, 5000)
+      setTimeout(() => setNotification(null), 5000)
     }
   }
 
-  // 2 input feild change
-  const handlePassword = (event) => {
-    setPassword(event.target.value)
-  }
-
-  // 3 input feild change
-  const handleUsername = (event) => {
-    setUsername(event.target.value)
-  }
-
-  // 4 logout
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogappUser')
     blogService.setToken(null)
     setUser(null)
+    // Imperative navigate, same category as addBlog/deleteBlog: logging out
+    // is a one-time reaction to this click, not something a route ternary
+    // is already checking for elsewhere - so there's no "free" declarative
+    // redirect to piggyback on the way there was for handleLogin.
+    navigate('/')
   }
 
-  // blogForm event handlers
-  // 1 submission 
-  // we need REFS
-  const blogFormRef = useRef()
-
-  // App's addBlog — talks to the backend
+  // ---- BLOG CRUD ----
+  // addBlog is passed down to BlogForm as the `createBlog` prop. BlogForm
+  // itself calls navigate('/') after this resolves, redirecting the user
+  // back to the blog list - that redirect logic lives in BlogForm.jsx, not
+  // here, because BlogForm is the component that's actually rendered on the
+  // "/create" route and has access to useNavigate there.
   const addBlog = async (blogObject) => {
     try {
       const returnedBlog = await blogService.create(blogObject)
       setBlogs(blogs.concat(returnedBlog))
-      blogFormRef.current.toggleVisibility()
       setNotification({ message: `a new blog ${returnedBlog.title} by ${returnedBlog.author} added`, type: 'success' })
       setTimeout(() => setNotification(null), 5000)
     } catch {
@@ -103,7 +94,8 @@ const App = () => {
     }
   }
 
-  // 2
+  // handleLike is passed to Blog as the `handleLike` prop It sends the
+  // FULL updated blog object to the backend
   const handleLike = async (blogToUpdate) => {
     const updatedBlog = {
       title: blogToUpdate.title,
@@ -112,69 +104,85 @@ const App = () => {
       likes: blogToUpdate.likes + 1,
       user: blogToUpdate.user?.id || blogToUpdate.user
     }
-
     try {
       const returnedBlog = await blogService.update(blogToUpdate.id, updatedBlog)
-
-      setBlogs(blogs.map(blog =>
-        blog.id !== returnedBlog.id ? blog : returnedBlog
-      ))
-    } catch (error) {
-      console.error('Error updating likes:', error)
+      setBlogs(blogs.map(blog => blog.id !== returnedBlog.id ? blog : returnedBlog))
+    } catch {
       setNotification({ message: 'Failed to update likes', type: 'error' })
       setTimeout(() => setNotification(null), 5000)
     }
   }
 
-  // EVENT HANDLER DELETE
+  // handleDelete is passed to Blog as the `handleDelete` prop. Blog itself
+  // calls navigate('/') right after calling this, redirecting the user back
+  // to the list once deletion is triggered.
   const handleDelete = async (blogToDelete) => {
-  if (!window.confirm(`Remove blog "${blogToDelete.title}" by ${blogToDelete.author}?`)) {
-    return
+    try {
+      await blogService.remove(blogToDelete.id)
+      setBlogs(blogs.filter(blog => blog.id !== blogToDelete.id))
+      setNotification({ message: `Blog "${blogToDelete.title}" deleted successfully`, type: 'success' })
+      setTimeout(() => setNotification(null), 5000)
+    } catch {
+      setNotification({ message: 'Failed to delete blog', type: 'error' })
+      setTimeout(() => setNotification(null), 5000)
+    }
   }
 
-  try {
-    await blogService.remove(blogToDelete.id)
-    setBlogs(blogs.filter(blog => blog.id !== blogToDelete.id))
-    setNotification({ message: `Blog "${blogToDelete.title}" deleted successfully`, type: 'success' })
-    setTimeout(() => setNotification(null), 5000)
-  } catch (error) {
-     console.error('Error deleting blog:', error)
-    setNotification({ message: 'Failed to delete blog', type: 'error' })
-    setTimeout(() => setNotification(null), 5000)
-  }
-}
+  const padding = { padding: 5 }
 
+  // ---- FIGURING OUT WHICH BLOG TO SHOW ON /blogs/:id ----
+  // useMatch('/blogs/:id') returns null UNLESS the current URL matches that
+  // pattern, in which case it returns an object with match.params.id equal
+  // to whatever's in the URL (e.g. visiting /blogs/64f... gives id "64f...").
+  // This re-runs every time App re-renders, which happens on every URL
+  // change - so `blog` is always kept in sync with the current route.
+  const match = useMatch('/blogs/:id')
+  const blog = match
+    ? blogs.find(blog => blog.id === match.params.id)
+    : null
 
   return (
     <div>
+      <div>
+        <Link style={padding} to="/">blogs</Link>
+        {user
+          ? <>
+              <Link style={padding} to="/create">new blog</Link>
+              <br/> <br/>
+              <span>{user.name} logged in <button onClick={handleLogout}>logout</button></span>
+            </>
+          : <Link style={padding} to="/login">login</Link>
+        }
+      </div>
 
       <Notification notification={notification} />
 
-      {!user && <LoginForm handleLogin={handleLogin} password={password} username={username} handlePassword={handlePassword} handleUsername={handleUsername} />}
-      {user && (
-        <div>
-          <p>{user.name} logged in</p>
-          <button onClick={handleLogout}>logout</button>
-        </div>
-      )}
+      <Routes>
+        {/* <Navigate> is React Router's way of
+            doing a redirect from inside a route element */}
+        <Route path="/login" element={
+          user ? <Navigate replace to="/" /> :
+          <LoginForm handleLogin={handleLogin} />
+        } />
 
-      {user && (
-        <Togglable buttonLabel="create new blog" ref={blogFormRef}>
+        {/* Route that only logged-in users may reach /create. Anyone else
+            gets bounced to /login */}
+        <Route path="/create" element={
+          !user ? <Navigate replace to="/login" /> :
           <BlogForm createBlog={addBlog} />
-        </Togglable>
-      )}
+        } />
 
-      {user && (
-        <>
-          <h2>Blogs list :</h2>
-          {[...blogs]
-            .sort((a, b) => b.likes - a.likes)
-            .map(blog =>
-              <Blog key={blog.id} blog={blog} handleLike={handleLike} handleDelete={handleDelete} currentUser={user}/>
-            )
-          }
-        </>
-      )}
+        {/* Parameterized route. React Router extracts the :id part of the
+            URL and (via useMatch above) we look up the matching blog and
+            pass just THAT blog down - Blog never has to search the array
+            itself. */}
+        <Route path="/blogs/:id" element={
+          <Blog blog={blog} handleLike={handleLike} handleDelete={handleDelete} currentUser={user} />
+        } />
+
+        {/* Root route: the full blog list, sorted by likes descending*/}
+        <Route path="/" element={<BlogList blogs={blogs} />} />
+      </Routes>
     </div>
   )
 }

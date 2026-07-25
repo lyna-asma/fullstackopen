@@ -50,7 +50,7 @@ describe('Blog app', () => {
             await page.getByLabel('password').fill('wrong')
 
             await page.getByRole('button', { name: 'login' }).click()
-
+await expect(page.getByText('wrong credentials')).toBeVisible()
             // now we can add expect bcz we actually entered info 
             await expect(page.getByText('Matti Luukkainen logged in')).not.toBeVisible()
         })
@@ -66,6 +66,13 @@ describe('Blog app', () => {
 
             await expect(page.getByText('Component testing is done with react-testing-library').first()).toBeVisible()
         })
+
+  test('a blog can be liked', async ({ page }) => {
+            await createBlog(page, 'test blog', 'tester', 'http://test.com')
+
+            await expect(page.getByText('1 likes')).toBeVisible()
+        })
+
 
         test('user who added the blog can delete it', async ({ page }) => {
             await createBlog(page, 'Component testing is done with react-testing-library', 'Kent C. Dodds', 'http://example.com')

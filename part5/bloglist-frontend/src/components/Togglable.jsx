@@ -3,7 +3,7 @@ import { useState, forwardRef, useImperativeHandle } from 'react'
 // forwardRef lets this component RECEIVE a ref from its parent.
 // Without forwardRef, a normal component can't accept `ref` as a prop at all.
 const Togglable = forwardRef((props, ref) => {
-  // refs = the noteFormRef object that App created and passed down
+  // refs = the blogFormRef object that App created and passed down
 
   const [visible, setVisible] = useState(false)
 

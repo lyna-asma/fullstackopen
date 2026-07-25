@@ -1,10 +1,12 @@
 import { useState } from 'react'
-
+import { useNavigate } from 'react-router-dom'
 const BlogForm = ({ createBlog }) => {
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [url, setUrl] = useState('')
 
+
+  const navigate = useNavigate()
   const handleTitle = (event) => setTitle(event.target.value)
   const handleAuthor = (event) => setAuthor(event.target.value)
   const handleUrl = (event) => setUrl(event.target.value)
@@ -19,6 +21,7 @@ const BlogForm = ({ createBlog }) => {
     setTitle('')
     setAuthor('')
     setUrl('')
+    navigate('/')
   }
 
   return (
