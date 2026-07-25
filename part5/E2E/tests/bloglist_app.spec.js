@@ -5,8 +5,7 @@ describe('Blog app', () => {
     beforeEach(async ({ page, request }) => {
         // emptying the DB
         await request.post('/api/testing/reset')
-        // creating a new user 
-
+        // creating a new user
         await request.post('/api/users', {
             data: {
                 name: 'Matti Luukkainen',
@@ -16,10 +15,12 @@ describe('Blog app', () => {
         })
 
         await page.goto('/')
-
     })
 
     test('Login form is shown', async ({ page }) => {
+        // Old version checked this right on page load, because the app now we need this 
+        await page.getByRole('link', { name: 'login' }).click()
+
         const locator = await page.getByText('Login to application')
         await expect(locator).toBeVisible()
 
@@ -28,30 +29,25 @@ describe('Blog app', () => {
         await expect(page.getByRole('button', { name: 'login' })).toBeVisible()
     })
 
-
     describe('Login', () => {
         test('succeeds with correct credentials', async ({ page }) => {
+            await page.getByRole('link', { name: 'login' }).click()
 
-            // the username gets entered first then password second , to avoid fail bcz we have 2 input feilds
-            // it could have been done with : getAllByRole then accessing an array . or  getByText  ,  but labels are better , or even test_id if we have ones in our input feilds
             await page.getByLabel('username').fill('mluukkai')
             await page.getByLabel('password').fill('salainen')
-
             await page.getByRole('button', { name: 'login' }).click()
 
-            // now we can add expect bcz we actually entered info 
             await expect(page.getByText('Matti Luukkainen logged in')).toBeVisible()
         })
 
         test('fails with wrong credentials', async ({ page }) => {
-            // the username gets entered first then password second , to avoid fail bcz we have 2 input feilds
-            // it could have been done with : getAllByRole then accessing an array . or  getByText  ,  but labels are better , or even test_id if we have ones in our input feilds
+            await page.getByRole('link', { name: 'login' }).click()
+
             await page.getByLabel('username').fill('mluukkai')
             await page.getByLabel('password').fill('wrong')
-
             await page.getByRole('button', { name: 'login' }).click()
-await expect(page.getByText('wrong credentials')).toBeVisible()
-            // now we can add expect bcz we actually entered info 
+
+            await expect(page.getByText('wrong credentials')).toBeVisible()
             await expect(page.getByText('Matti Luukkainen logged in')).not.toBeVisible()
         })
     })
@@ -67,30 +63,38 @@ await expect(page.getByText('wrong credentials')).toBeVisible()
             await expect(page.getByText('Component testing is done with react-testing-library').first()).toBeVisible()
         })
 
-  test('a blog can be liked', async ({ page }) => {
+        test('a blog can be liked', async ({ page }) => {
             await createBlog(page, 'test blog', 'tester', 'http://test.com')
 
-            await expect(page.getByText('1 likes')).toBeVisible()
-        })
+            // Old version checked "1 likes" right on the list page, because
+            // the list used to render each blog's like count inline. The
+            // list only shows title+author links now - the like count only
+            // exists on the blog's own page, so we have to go there first.
+            await page.getByRole('link', { name: 'test blog' }).click()
+            await page.getByRole('button', { name: 'like' }).click()
 
+            // Also note the word order: Blog.jsx renders "likes {n}", not
+            // "{n} likes" - the old assertion had it backwards for this app.
+            await expect(page.getByText('likes 1')).toBeVisible()
+        })
 
         test('user who added the blog can delete it', async ({ page }) => {
             await createBlog(page, 'Component testing is done with react-testing-library', 'Kent C. Dodds', 'http://example.com')
 
-            const blogElement = page.locator('.blog', { hasText: 'Component testing is done with react-testing-library' })
-            await blogElement.getByRole('button', { name: 'view' }).click()
+            // Old version clicked "view" to expand the row first. Now we
+            // navigate to the blog's own page by clicking its title link.
+            await page.getByRole('link', { name: 'Component testing is done with react-testing-library' }).click()
 
-            // Playwright auto-accepts the native window.confirm() dialog , thisis to be able to simulate an 
-            // acception of the user to delete after that pop up shows up like in browser 
+            // Playwright auto-accepts the native window.confirm() dialog
+            // Blog.jsx pops up before actually deleting.
             page.on('dialog', dialog => dialog.accept())
+            await page.getByRole('button', { name: 'remove' }).click()
 
-            await blogElement.getByRole('button', { name: 'remove' }).click()
-            await expect(page.locator('.blog', { hasText: 'Component testing is done with react-testing-library' })).not.toBeVisible()
+            // Blog.jsx calls navigate('/') right after triggering the
+            // delete, so we end up back on the list - confirm the deleted
+            // blog's link is gone from it.
+            await expect(page.getByRole('link', { name: 'Component testing is done with react-testing-library' })).not.toBeVisible()
         })
-
-
-
-
 
         test('blogs are ordered by likes, most liked first', async ({ page }) => {
             await createBlog(page, 'First blog', 'Author One', 'http://example.com/1')
@@ -106,30 +110,23 @@ await expect(page.getByText('wrong credentials')).toBeVisible()
 
             // 'First blog' stays at 0 likes
 
-            // reload so blogs re-fetch and re-sort from the backend
             await page.reload()
-            // Without this, the test might try to read blog elements before they're rendered.
-            // waits until at least one element with class blog is visible.
             await page.locator('.blog').first().waitFor()
 
-            // Get all blog titles in order
-            // .allTextContents(): Returns an array of strings, where each string contains ALL text inside each blog element.
             const blogTitles = await page.locator('.blog').allTextContents()
 
-            // Clean up the text to just get the title portion before ", written by"
+            // Old version split on ", written by" because Blog.jsx used to
+            // render that exact phrase. BlogList.jsx now renders links as
+            // "{title} by {author}" (no comma) - so the split pattern has
+            // to match "by" instead.
             const cleanedTitles = blogTitles.map(text => {
-                // Extract just the title part (before ", written by")
-                const match = text.match(/^([^,]+)/)
+                const match = text.match(/^(.*) by /)
                 return match ? match[1].trim() : text
             })
 
-            // Verify the titles are in correct order
             expect(cleanedTitles[0]).toContain('Second blog')
             expect(cleanedTitles[1]).toContain('Third blog')
             expect(cleanedTitles[2]).toContain('First blog')
         })
     })
-
-
-
 })
