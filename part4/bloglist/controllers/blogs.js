@@ -26,10 +26,7 @@ blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
   })
 
   const savedBlog = await blog.save()
-
-  // Populate user before sending response
   await savedBlog.populate('user', { username: 1, name: 1 })
-  
 
   user.blogs = user.blogs.concat(savedBlog._id)
   await user.save()
@@ -37,7 +34,9 @@ blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
   response.status(201).json(savedBlog)
 })
 
-// DELETE a blog by id — requires token, uses userExtractor, checks ownership
+// DELETE a blog by id — requires token, uses userExtractor, checks ownership.
+// This one keeps the ownership check: deleting is destructive and should
+// stay restricted to the blog's creator.
 blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
   const user = request.user
 
@@ -54,18 +53,17 @@ blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) =
   response.status(204).end()
 })
 
-// UPDATE a blog by id — requires token, uses userExtractor, checks ownership
+// UPDATE a blog by id — requires a valid token (userExtractor), but NOT
+// ownership. Liking is meant to be open to any logged-in user, not just
+// the blog's creator (exercise 5.25: "only logged-in users can Like a
+// blog" - it doesn't say "only the creator"). The frontend's like button
+// is shown to any currentUser, so the backend needs to allow that too.
 blogsRouter.put('/:id', middleware.userExtractor, async (request, response) => {
   const body = request.body
-  const user = request.user
 
   const blog = await Blog.findById(request.params.id)
   if (!blog) {
     return response.status(404).end()
-  }
-
-  if (blog.user.toString() !== user._id.toString()) {
-    return response.status(401).json({ error: 'only the creator can update this blog' })
   }
 
   const updatedFields = {
@@ -79,7 +77,7 @@ blogsRouter.put('/:id', middleware.userExtractor, async (request, response) => {
     request.params.id,
     updatedFields,
     { returnDocument: 'after' })
-    .populate('user', { username: 1, name: 1 }) 
+    .populate('user', { username: 1, name: 1 })
   response.json(updatedBlog)
 })
 
