@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Link, Navigate, useMatch, useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
 import Blog from './components/Blog'
 import BlogList from './components/BlogList'
 import blogService from './services/blogs'
@@ -7,6 +8,35 @@ import loginService from './services/login'
 import Notification from './components/Notification'
 import LoginForm from './components/LoginForm'
 import BlogForm from './components/BlogForm'
+
+const Page = styled.div`
+  padding: 1em 2em;
+  max-width: 700px;
+  margin: 0 auto;
+`
+
+const Navigation = styled.div`
+  background: #34495e;
+  padding: 0.75em 1em;
+  border-radius: 4px;
+  margin-bottom: 1em;
+
+  a {
+    color: white;
+    text-decoration: none;
+    margin-right: 1em;
+    font-weight: 500;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  span {
+    color: #dcdde1;
+    float: right;
+  }
+`
 
 // NOTE: there is NO <Router> here. The <Router> (BrowserRouter) lives in
 // main.jsx, wrapping <App />. Why: React Router's useMatch hook (used below)
@@ -94,8 +124,9 @@ const App = () => {
     }
   }
 
-  // handleLike is passed to Blog as the `handleLike` prop It sends the
-  // FULL updated blog object to the backend
+  // handleLike is passed to Blog as the `handleLike` prop. It sends the
+  // FULL updated blog object to the backend (PUT expects title/author/url
+  // too, not just the incremented like count).
   const handleLike = async (blogToUpdate) => {
     const updatedBlog = {
       title: blogToUpdate.title,
@@ -128,45 +159,45 @@ const App = () => {
     }
   }
 
-  const padding = { padding: 5 }
 
-  // ---- FIGURING OUT WHICH BLOG TO SHOW ON /blogs/:id ----
-  // useMatch('/blogs/:id') returns null UNLESS the current URL matches that
-  // pattern, in which case it returns an object with match.params.id equal
-  // to whatever's in the URL (e.g. visiting /blogs/64f... gives id "64f...").
-  // This re-runs every time App re-renders, which happens on every URL
-  // change - so `blog` is always kept in sync with the current route.
+
   const match = useMatch('/blogs/:id')
   const blog = match
     ? blogs.find(blog => blog.id === match.params.id)
     : null
 
   return (
-    <div>
-      <div>
-        <Link style={padding} to="/">blogs</Link>
+    <Page>
+      {/* Navigation bar: <Link> changes the URL without a full page reload.
+          It's conditional on `user` so logged-out visitors only see "login",
+          while logged-in visitors see "create new" and a logout button. */}
+      <Navigation>
+        <Link to="/">blogs</Link>
         {user
           ? <>
-              <Link style={padding} to="/create">new blog</Link>
-              <br/> <br/>
+              <Link to="/create">create new</Link>
               <span>{user.name} logged in <button onClick={handleLogout}>logout</button></span>
             </>
-          : <Link style={padding} to="/login">login</Link>
+          : <Link to="/login">login</Link>
         }
-      </div>
+      </Navigation>
 
       <Notification notification={notification} />
 
+      {/* <Routes> picks exactly ONE <Route> to render based on the current
+          URL, matching top to bottom. Everything else on screen (nav bar,
+          notification) stays mounted regardless of route. */}
       <Routes>
-        {/* <Navigate> is React Router's way of
-            doing a redirect from inside a route element */}
+        {/* If already logged in, redirect away from /login instead of
+            showing the form again. <Navigate> is React Router's way of
+            doing a redirect from inside a route's element. */}
         <Route path="/login" element={
           user ? <Navigate replace to="/" /> :
           <LoginForm handleLogin={handleLogin} />
         } />
 
-        {/* Route that only logged-in users may reach /create. Anyone else
-            gets bounced to /login */}
+        {/* Route guard: only logged-in users may reach /create. Anyone else
+            gets bounced to /login. */}
         <Route path="/create" element={
           !user ? <Navigate replace to="/login" /> :
           <BlogForm createBlog={addBlog} />
@@ -180,10 +211,13 @@ const App = () => {
           <Blog blog={blog} handleLike={handleLike} handleDelete={handleDelete} currentUser={user} />
         } />
 
-        {/* Root route: the full blog list, sorted by likes descending*/}
+        {/* Root route: the full blog list, sorted by likes descending.
+            BlogList is the direct equivalent of the course's NoteList - the
+            only structural difference from the notes app is that the blog
+            app has no separate "Home" page: "/" IS the list. */}
         <Route path="/" element={<BlogList blogs={blogs} />} />
       </Routes>
-    </div>
+    </Page>
   )
 }
 

@@ -1,8 +1,39 @@
 import { useState } from 'react'
+import styled from 'styled-components'
 
-// LoginForm now owns username/password itself - App no longer knows or
-// cares what's currently typed into these fields. App only gets involved
-// once there's an actual submit, via the handleLogin prop.
+
+const Input = styled.input`
+  margin: 0.25em 0.5em 0.25em 0;
+  padding: 0.4em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+`
+
+const Button = styled.button`
+  background: #4a69bd;
+  color: white;
+  font-size: 1em;
+  padding: 0.4em 1.2em;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background: #3c58a8;
+  }
+`
+
+const FormWrapper = styled.div`
+  background: #f4f4f4;
+  padding: 1.5em;
+  border-radius: 6px;
+  max-width: 320px;
+`
+
+const FieldRow = styled.div`
+  margin-bottom: 0.75em;
+`
+
 const LoginForm = ({ handleLogin }) => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -10,46 +41,43 @@ const LoginForm = ({ handleLogin }) => {
   const handleUsername = (event) => setUsername(event.target.value)
   const handlePassword = (event) => setPassword(event.target.value)
 
-  // This is LoginForm's own submit handler. It owns the event now (so it's
-  // the one calling preventDefault, not App), and it hands the *values* -
-  // not the event - up to App's handleLogin.
   const onSubmit = async (event) => {
     event.preventDefault()
     await handleLogin(username, password)
-    // Clear the fields after attempting login - whether it succeeded or
-    // failed. If you'd rather keep a failed attempt's values visible so
-    // the person can just fix a typo, drop this and only clear on success.
     setUsername('')
     setPassword('')
   }
 
   return (
-    <div>
+    <FormWrapper>
       <h2>Login to application</h2>
       <form onSubmit={onSubmit}>
-        <div>
+        <FieldRow>
           <label>
             username
-            <input
+            <br />
+            <Input
               value={username}
               onChange={handleUsername}
               name="username"
             />
           </label>
-        </div>
-        <div>
+        </FieldRow>
+        <FieldRow>
           <label>
             password
-            <input
+            <br />
+            <Input
               value={password}
               onChange={handlePassword}
               name="password"
+              type="password"
             />
           </label>
-        </div>
-        <button type="submit">login</button>
+        </FieldRow>
+        <Button type="submit">login</Button>
       </form>
-    </div>
+    </FormWrapper>
   )
 }
 
