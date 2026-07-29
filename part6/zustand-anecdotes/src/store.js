@@ -24,7 +24,14 @@ const useAnecdoteStore = create((set) => ({
       anecdotes: state.anecdotes.map(anecdote =>
         anecdote.id === id ? { ...anecdote, votes: anecdote.votes + 1 } : anecdote
       )
+    })),
+    addAnecdote: (content) => set((state) => ({
+      // asObject wraps the string into { content, id, votes: 0 } — same shape as the seed data
+      // spreading state.anecdotes into a new array (rather than .push, which mutates)
+      // keeps this a pure update, which Zustand/Redux-style state requires
+      anecdotes: [...state.anecdotes, asObject(content)]
     }))
+
   }
 }))
 

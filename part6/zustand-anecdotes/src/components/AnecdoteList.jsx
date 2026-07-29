@@ -1,0 +1,25 @@
+import { useAnecdotes, useAnecdoteActions } from '../store'
+
+const AnecdoteList = () => {
+  const anecdotes = useAnecdotes()
+  const { vote } = useAnecdoteActions()
+
+ // toSorted() returns a NEW sorted array (doesn't mutate the original)
+  // (a, b) => b.votes - a.votes means: bigger vote count comes first (descending)
+  const sortedAnecdotes = anecdotes.toSorted((a, b) => b.votes - a.votes)
+
+  return (
+    <ul>
+      {sortedAnecdotes.map(anecdote => (
+        <li key={anecdote.id}>
+          {anecdote.content}
+          <br />
+          has {anecdote.votes}
+          <button onClick={() => vote(anecdote.id)}>vote</button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+export default AnecdoteList
