@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import anecdoteService from '../services/anecdotes'
+import useNotificationStore from './notificationStore'
 
 const useAnecdoteStore = create((set) => ({
   anecdotes: [], // start empty — data now comes from the backend, not anecdotesAtStart
@@ -19,6 +20,7 @@ const useAnecdoteStore = create((set) => ({
           anecdote.id === id ? returnedAnecdote : anecdote
         )
       }))
+      useNotificationStore.getState().actions.setNotification(`you voted '${returnedAnecdote.content}'`)
     },
 
     addAnecdote: async (content) => {
@@ -27,6 +29,7 @@ const useAnecdoteStore = create((set) => ({
       set((state) => ({
         anecdotes: [...state.anecdotes, newAnecdote]
       }))
+        useNotificationStore.getState().actions.setNotification(`you created '${newAnecdote.content}'`)
     },
     setFilter: (filter) => set({ filter }),
     // new: replaces the whole anecdotes array with what the backend sends
