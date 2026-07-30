@@ -19,6 +19,7 @@ const asObject = anecdote => ({
 
 const useAnecdoteStore = create((set) => ({
   anecdotes: anecdotesAtStart.map(asObject),
+  filter: "",
   actions: {
     vote: (id) => set((state) => ({
       anecdotes: state.anecdotes.map(anecdote =>
@@ -30,10 +31,17 @@ const useAnecdoteStore = create((set) => ({
       // spreading state.anecdotes into a new array (rather than .push, which mutates)
       // keeps this a pure update, which Zustand/Redux-style state requires
       anecdotes: [...state.anecdotes, asObject(content)]
-    }))
+    })),
+    setFilter:(filter) => set({filter})
 
   }
 }))
 
-export const useAnecdotes = () => useAnecdoteStore((state) => state.anecdotes)
+
+export const useAnecdotes = () => {
+  const anecdotes = useAnecdoteStore((state) => state.anecdotes)
+  const filter = useAnecdoteStore((state) => state.filter)
+ return anecdotes.filter(a => a.content.includes(filter))
+}
+
 export const useAnecdoteActions = () => useAnecdoteStore((state) => state.actions)
