@@ -29,7 +29,14 @@ const useAnecdoteStore = create((set) => ({
       set((state) => ({
         anecdotes: [...state.anecdotes, newAnecdote]
       }))
-        useNotificationStore.getState().actions.setNotification(`you created '${newAnecdote.content}'`)
+      useNotificationStore.getState().actions.setNotification(`you created '${newAnecdote.content}'`)
+    },
+    removeAnecdote: async (id) => {
+      await anecdoteService.remove(id)
+      set((state) => ({
+        // keep every anecdote except the one whose id matches — this removes it from local state
+        anecdotes: state.anecdotes.filter(anecdote => anecdote.id !== id)
+      }))
     },
     setFilter: (filter) => set({ filter }),
     // new: replaces the whole anecdotes array with what the backend sends

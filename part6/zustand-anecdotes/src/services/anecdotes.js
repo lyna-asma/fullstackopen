@@ -26,5 +26,10 @@ const update = async (id, updatedAnecdote) => {
   })
   return response.json()
 }
+const remove = async (id) => {
+  await fetch(`${baseUrl}/${id}`, {
+    method: 'DELETE'
+  })
+}
 
-export default { getAll, create , update }
+export default { getAll, create, update, remove }
