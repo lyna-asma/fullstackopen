@@ -38,6 +38,10 @@ const useAnecdoteStore = create((set) => ({
         anecdotes: state.anecdotes.filter(anecdote => anecdote.id !== id)
       }))
     },
+    initialize: async () => {
+      const anecdotes = await anecdoteService.getAll()
+      set(() => ({ anecdotes }))
+    },
     setFilter: (filter) => set({ filter }),
     // new: replaces the whole anecdotes array with what the backend sends
     setAnecdotes: (anecdotes) => set({ anecdotes })
@@ -51,3 +55,5 @@ export const useAnecdotes = () => {
 }
 
 export const useAnecdoteActions = () => useAnecdoteStore((state) => state.actions)
+
+export default useAnecdoteStore
