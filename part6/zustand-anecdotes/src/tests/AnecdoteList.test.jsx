@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, afterEach ,beforeEach, vi } from 'vitest'
 // render() mounts a real component into a fake DOM; screen lets us query what got rendered
-import { render, screen } from '@testing-library/react'
+import { render, screen , cleanup} from '@testing-library/react'
 import AnecdoteList from '../components/AnecdoteList'
 import useAnecdoteStore from '../stores/anecdoteStore'
 
@@ -38,4 +38,29 @@ describe('AnecdoteList', () => {
     expect(items[1].textContent).toContain('Medium votes')
     expect(items[2].textContent).toContain('Low votes')
   })
+    it('renders only anecdotes matching the filter', () => {
+    // overwrite state again for this test: same anecdotes, but now with a filter set.
+    // Only "High votes" contains the substring "High", so it should be the only one shown.
+    useAnecdoteStore.setState({
+      anecdotes: [
+        { id: 1, content: 'Low votes', votes: 1 },
+        { id: 2, content: 'High votes', votes: 10 },
+        { id: 3, content: 'Medium votes', votes: 5 },
+      ],
+      filter: 'High'
+    })
+
+    render(<AnecdoteList />)
+
+    const items = screen.getAllByRole('listitem')
+
+    // only one <li> should exist now, since only one anecdote's content matches the filter
+    expect(items).toHaveLength(1)
+    expect(items[0].textContent).toContain('High votes')
+  })
+})
+
+afterEach(() => {
+  // unmounts whatever was rendered in the previous test, removing it from the DOM
+  cleanup()
 })
