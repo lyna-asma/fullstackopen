@@ -1,36 +1,40 @@
 import {
-    // this is bcz it s needed to wrap the fetch request with it , it receives 2 params , 1 the key param (the notes list ) , 2 the actual functions that fetches the key param value in server 
-    useQuery,
-    // it's to actually upate the notes in tehe server when a new note is added  or old note is modified
-    useMutation,
-    // this is needed to update the visual state rendered on screen with the server value of the key when it succumbs any update (ex adding a new note to the list )
-    useQueryClient
+  // this is bcz it s needed to wrap the fetch request with it , it receives 2 params , 1 the key param (the notes list ) , 2 the actual functions that fetches the key param value in server 
+  useQuery,
+  // it's to actually upate the notes in tehe server when a new note is added  or old note is modified
+  useMutation,
+  // this is needed to update the visual state rendered on screen with the server value of the key when it succumbs any update (ex adding a new note to the list )
+  useQueryClient
 } from '@tanstack/react-query'
 import { getAnecdotes, createAnecdote, updateAnecdote } from '../requests'
 // useAnecdotes.js — filling the box at the two moments: after add, after vote
 
-import { useNotification } from '../contexts/NotificationContext'
+import { useNotify } from '../contexts/NotificationContext'
 
 
 export const useAnecdotes = () => {
- const { showNotification } = useNotification()
+  const { showNotification } = useNotify()
 
-    const queryClient = useQueryClient()
+  const queryClient = useQueryClient()
 
-    const result = useQuery({
-        queryKey: ['anecdotes'],
-        queryFn: getAnecdotes,
-        // the retry if any error ocuusr is set to happen only once , it could be more than once or never (false)
-        retry: 1,
-        refetchOnWindowFocus: false
-    })
+  const result = useQuery({
+    queryKey: ['anecdotes'],
+    queryFn: getAnecdotes,
+    // the retry if any error ocuusr is set to happen only once , it could be more than once or never (false)
+    retry: 1,
+    refetchOnWindowFocus: false
+  })
 
-    
+
   const newAnecdoteMutation = useMutation({
     mutationFn: createAnecdote,
     onSuccess: (newAnecdote) => {
       queryClient.invalidateQueries({ queryKey: ['anecdotes'] })
       showNotification(`you created '${newAnecdote.content}'`)
+    },
+      // runs when the POST request fails (server rejects it, e.g. content too short)
+    onError: () => {
+      showNotification('anecdote content too short, must have length 5 or more')
     }
   })
 
@@ -42,12 +46,12 @@ export const useAnecdotes = () => {
     }
   })
 
-    return {
-        anecdotes: result.data,
-        isPending: result.isPending,
-        isError: result.isError,
-        addAnecdote: (content) => newAnecdoteMutation.mutate({ content, votes: 0 }),
-        vote: (anecdote) => voteMutation.mutate({ ...anecdote, votes: anecdote.votes + 1 })
+  return {
+    anecdotes: result.data,
+    isPending: result.isPending,
+    isError: result.isError,
+    addAnecdote: (content) => newAnecdoteMutation.mutate({ content, votes: 0 }),
+    vote: (anecdote) => voteMutation.mutate({ ...anecdote, votes: anecdote.votes + 1 })
 
-    }
+  }
 }

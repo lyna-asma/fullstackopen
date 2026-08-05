@@ -1,9 +1,9 @@
 // Notification.jsx — looks inside the box and shows what's there
 
-import { useNotification } from '../contexts/NotificationContext'
+import { useNotify } from '../contexts/NotificationContext'
 
 const Notification = () => {
-  const { text } = useNotification()
+  const { text } = useNotify()
 
   const style = {
     border: 'solid',
