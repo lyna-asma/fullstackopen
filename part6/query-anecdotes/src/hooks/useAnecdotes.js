@@ -7,8 +7,13 @@ import {
     useQueryClient
 } from '@tanstack/react-query'
 import { getAnecdotes, createAnecdote, updateAnecdote } from '../requests'
+// useAnecdotes.js — filling the box at the two moments: after add, after vote
+
+import { useNotification } from '../contexts/NotificationContext'
+
 
 export const useAnecdotes = () => {
+ const { showNotification } = useNotification()
 
     const queryClient = useQueryClient()
 
@@ -20,19 +25,22 @@ export const useAnecdotes = () => {
         refetchOnWindowFocus: false
     })
 
-    const voteMutation = useMutation({
-        mutationFn: updateAnecdote,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['anecdotes'] })
-        }
-    })
+    
+  const newAnecdoteMutation = useMutation({
+    mutationFn: createAnecdote,
+    onSuccess: (newAnecdote) => {
+      queryClient.invalidateQueries({ queryKey: ['anecdotes'] })
+      showNotification(`you created '${newAnecdote.content}'`)
+    }
+  })
 
-    const newAnecdoteMutation = useMutation({
-        mutationFn: createAnecdote,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['anecdotes'] })
-        }
-    })
+  const voteMutation = useMutation({
+    mutationFn: updateAnecdote,
+    onSuccess: (updatedAnecdote) => {
+      queryClient.invalidateQueries({ queryKey: ['anecdotes'] })
+      showNotification(`you voted '${updatedAnecdote.content}'`)
+    }
+  })
 
     return {
         anecdotes: result.data,
