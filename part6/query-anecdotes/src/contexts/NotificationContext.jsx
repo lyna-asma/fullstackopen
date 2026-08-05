@@ -20,4 +20,5 @@ export const NotificationProvider = ({ children }) => {
 }
 
 // renamed from useNotification to useNotify, same job: reach into the box
+// eslint-disable-next-line react-refresh/only-export-components
 export const useNotify = () => useContext(NotificationContext)

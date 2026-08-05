@@ -29,6 +29,7 @@ export const useAnecdotes = () => {
   const newAnecdoteMutation = useMutation({
     mutationFn: createAnecdote,
     onSuccess: (newAnecdote) => {
+      //  refetch the anecdotes list from the server and update the visual state with the new list
       queryClient.invalidateQueries({ queryKey: ['anecdotes'] })
       showNotification(`you created '${newAnecdote.content}'`)
     },
