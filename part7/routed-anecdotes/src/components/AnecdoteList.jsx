@@ -1,4 +1,13 @@
-const AnecdoteList = ({ anecdotes }) => (
+const AnecdoteList = ({ anecdotes }) =>
+  
+  {
+
+if (!anecdotes || !Array.isArray(anecdotes)) {
+    console.log('Anecdotes value:', anecdotes)
+    return <div>No anecdotes available</div>
+  }
+  
+  return  (
   <div>
     <h2>Anecdotes</h2>
     <ul>
@@ -6,5 +15,5 @@ const AnecdoteList = ({ anecdotes }) => (
     </ul>
   </div>
 )
-
+  }
 export default AnecdoteList
