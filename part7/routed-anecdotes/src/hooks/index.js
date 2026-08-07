@@ -34,9 +34,31 @@ export const useAnecdotes = () => {
         })
     }, [])
 
-    const onAddAnecdote = (anecdote) => {
-        setAnecdotes(anecdotes.concat({ ...anecdote, id: Math.round(Math.random() * 10000) }))
+    const onAddAnecdote = async (anecdote) => {
+        console.log('Adding anecdote:', anecdote)
+        const newAnecdote = await anecdotesService.createNew(anecdote)
+        setAnecdotes(prevAnecdotes => prevAnecdotes.concat(newAnecdote))
     }
 
-    return { anecdotes, onAddAnecdote }
+const onDeleteAnecdote = async (id) => {
+    console.log('Deleting anecdote with id:', id, 'Type:', typeof id)
+    
+    try {
+        await anecdotesService.deleteAnecdote(id)
+        console.log('Delete successful from server')
+        
+        setAnecdotes(prevAnecdotes => {
+            console.log('Previous anecdotes:', prevAnecdotes)
+            const filtered = prevAnecdotes.filter(anecdote => {
+                console.log('Comparing:', anecdote.id, typeof anecdote.id, 'with', id, typeof id)
+                return anecdote.id !== id
+            })
+            console.log('Filtered anecdotes:', filtered)
+            return filtered
+        })
+    } catch (error) {
+        console.error('Delete failed:', error)
+    }
+}
+    return { anecdotes, onAddAnecdote, onDeleteAnecdote }
 }
