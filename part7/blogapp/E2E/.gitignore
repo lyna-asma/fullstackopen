@@ -1,0 +1,13 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+
+# your dev tooling scripts, not part of the actual project
+gather.py
+code_dump.txt

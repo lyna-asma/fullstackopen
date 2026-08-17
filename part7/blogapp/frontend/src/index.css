@@ -1,0 +1,12 @@
+/* Global styles only - anything component-specific lives in styled-components
+   inside the components themselves, not here. See earlier discussion on why
+   these live separately. */
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
