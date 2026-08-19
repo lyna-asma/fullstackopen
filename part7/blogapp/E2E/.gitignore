@@ -8,6 +8,6 @@ node_modules/
 /playwright/.auth/
 
 
-# your dev tooling scripts, not part of the actual project
+#  dev tooling scripts, not part of the actual project
 gather.py
 code_dump.txt

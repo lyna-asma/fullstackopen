@@ -53,14 +53,21 @@ if (process.env.NODE_ENV === 'test') {
   const testingRouter = require('./controllers/testing')
   app.use('/api/testing', testingRouter)
 }
+
+
+console.log('NODE_ENV is:', process.env.NODE_ENV)
 // to serve the frontend build files in production mode
 // we don t use static middleware to be able to configure the default route to index.html for all unknown routes (for react-router-dom)
 if (process.env.NODE_ENV === 'production') {
-  app.get('/*splat', (req, res) => {
+  // serve actual built files (JS, CSS, images) first
+  app.use(express.static(path.join(__dirname, '../frontend/dist')))
+
+  // fallback: any remaining unmatched route (including "/") goes to index.html
+  // so React Router can handle it client-side
+  app.get('/{*splat}', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'))
   })
 }
-
 // before the last middleware => unknown endpoint handler (moved to utils/middleware)
 app.use(middleware.unknownEndpoint)
 
