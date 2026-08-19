@@ -92,8 +92,9 @@ useEffect(() => {
       // No explicit navigate() call is needed here: once `user` becomes
       // truthy, the "/login" route below re-renders and its own element
       // becomes <Navigate replace to="/" />, which redirects automatically.
-    } catch {
-      setNotification({ message: 'wrong credentials', type: 'error' })
+    } catch (error) {
+  console.log('LOGIN ERROR:', error.response?.status, error.response?.data, error.message)
+  setNotification({ message: 'wrong credentials', type: 'error' })
       setTimeout(() => setNotification(null), 5000)
     }
   }
