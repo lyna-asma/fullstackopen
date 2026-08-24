@@ -29,6 +29,7 @@ mongoose.connect(config.MONGODB_URI, { family: 4 })
     logger.error('error connecting to MongoDB:', error.message)
   })
 
+
 // json parser middleware for the req.body to be used
 app.use(express.json())
 
@@ -59,11 +60,15 @@ console.log('NODE_ENV is:', process.env.NODE_ENV)
 // to serve the frontend build files in production mode
 // we don t use static middleware to be able to configure the default route to index.html for all unknown routes (for react-router-dom)
 if (process.env.NODE_ENV === 'production') {
-  // serve actual built files (JS, CSS, images) first
-  app.use(express.static(path.join(__dirname, '../frontend/dist')))
+  const distPath = path.join(__dirname, '../frontend/dist')
+  console.log('Serving static files from:', distPath)
+  console.log('dist exists:', require('fs').existsSync(distPath))
+  console.log('index.html exists:', require('fs').existsSync(path.join(distPath, 'index.html')))
 
-  // fallback: any remaining unmatched route (including "/") goes to index.html
-  // so React Router can handle it client-side
+  app.use(express.static(distPath))
+
+
+
   app.get('/{*splat}', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'))
   })
