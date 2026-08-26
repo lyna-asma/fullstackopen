@@ -8,6 +8,8 @@ import loginService from './services/login'
 import Notification from './components/Notification'
 import LoginForm from './components/LoginForm'
 import BlogForm from './components/BlogForm'
+import ErrorBoundary from './components/ErrorBoundary'
+
 
 const Page = styled.div`
   padding: 1em 2em;
@@ -48,10 +50,8 @@ const Navigation = styled.div`
 
 const App = () => {
   // ---- STATE ----
-  // App is the single owner of all shared state: the blog list, the logged-in
-  // user, the login form fields, and the notification banner. Every route
-  // below is just a different "view" onto this same state - none of the
-  // child components (Blog, BlogForm, LoginForm) keep their own copy of it.
+  // App is the single owner of all shared state: the blog list, the logged-in user, the login form fields, and the notification banner.
+  // // Every route below is just a different "view" onto this same state - none of the child components (Blog, BlogForm, LoginForm) keep their own copy of it.
   const [blogs, setBlogs] = useState([])
   //reading localStorage is synchronous, so it belongs in the state initializer, not an effect that fires after the first paint
 const [user, setUser] = useState(() => {
@@ -60,8 +60,7 @@ const [user, setUser] = useState(() => {
 })
   const [notification, setNotification] = useState(null)
 
-  // useNavigate() has to be called inside a component that's rendered
-  // BELOW the <Router> in main.jsx - which App is - so this works fine here.
+  // useNavigate() has to be called inside a component that's rendered BELOW the <Router> in main.jsx - and  App is exactly like that - so this works fine here.
   const navigate = useNavigate()
 
   // Fetch all blogs once when the app first mounts (empty dependency array).
@@ -71,11 +70,9 @@ const [user, setUser] = useState(() => {
     })
   }, [])
 
-// Re-attach the user's token to the blogService module whenever `user`
-// changes (on mount if one was found above, and again after a fresh login),
+// Re-attach the user's token to the blogService module whenever `user` changes (on mount if one was found above, and again after a fresh login),
 // so authenticated requests (create/update/delete) carry the right token.
-// This is a genuine effect — it's syncing an external module, not computing
-// state — unlike the localStorage read above.
+// This is a genuine effect — it's syncing an external module, not computing state — unlike the localStorage read above.
 useEffect(() => {
   if (user) {
     blogService.setToken(user.token)
@@ -191,6 +188,7 @@ useEffect(() => {
       {/* <Routes> picks exactly ONE <Route> to render based on the current
           URL, matching top to bottom. Everything else on screen (nav bar,
           notification) stays mounted regardless of route. */}
+          <ErrorBoundary >
       <Routes>
         {/* If already logged in, redirect away from /login instead of
             showing the form again. <Navigate> is React Router's way of
@@ -221,6 +219,7 @@ useEffect(() => {
             app has no separate "Home" page: "/" IS the list. */}
         <Route path="/" element={<BlogList blogs={blogs} />} />
       </Routes>
+      </ErrorBoundary>
     </Page>
   )
 }
