@@ -1,19 +1,19 @@
-import { useState, forwardRef, useImperativeHandle } from 'react'
+import { useState, forwardRef, useImperativeHandle } from 'react';
 
 // forwardRef lets this component RECEIVE a ref from its parent.
 // Without forwardRef, a normal component can't accept `ref` as a prop at all.
 const Togglable = forwardRef((props, ref) => {
   // refs = the blogFormRef object that App created and passed down
 
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(false);
 
-  const hideWhenVisible = { display: visible ? 'none' : '' }
-  const showWhenVisible = { display: visible ? '' : 'none' }
+  const hideWhenVisible = { display: visible ? 'none' : '' };
+  const showWhenVisible = { display: visible ? '' : 'none' };
 
   // this is the function we want App to be able to call from outside
   const toggleVisibility = () => {
-    setVisible(!visible)
-  }
+    setVisible(!visible);
+  };
 
   // useImperativeHandle says: "whatever object is inside `refs`,
   // set its .current property to THIS object" (here, just { toggleVisibility })
@@ -21,9 +21,9 @@ const Togglable = forwardRef((props, ref) => {
   // because refs itself never changes identity — App's useRef guarantees that.
   useImperativeHandle(ref, () => {
     return {
-      toggleVisibility // exposing ONLY this function, nothing else internal
-    }
-  })
+      toggleVisibility, // exposing ONLY this function, nothing else internal
+    };
+  });
 
   return (
     <div>
@@ -35,7 +35,7 @@ const Togglable = forwardRef((props, ref) => {
         <button onClick={toggleVisibility}>cancel</button>
       </div>
     </div>
-  )
-})
+  );
+});
 
-export default Togglable
+export default Togglable;

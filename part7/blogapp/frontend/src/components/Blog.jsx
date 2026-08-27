@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
 const Card = styled.div`
   background: white;
@@ -8,13 +8,13 @@ const Card = styled.div`
   padding: 1.5em;
   max-width: 500px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-`
+`;
 
 const LikeRow = styled.p`
   display: flex;
   align-items: center;
   gap: 0.75em;
-`
+`;
 
 const LikeButton = styled.button`
   background: #f6b93b;
@@ -26,7 +26,7 @@ const LikeButton = styled.button`
   &:hover {
     background: #e0a02f;
   }
-`
+`;
 
 const RemoveButton = styled.button`
   background: #e55039;
@@ -40,7 +40,7 @@ const RemoveButton = styled.button`
   &:hover {
     background: #c8402e;
   }
-`
+`;
 
 // Blog is a FULL PAGE component, rendered only at the route "/blogs/:id"
 // (see App.jsx). It is not used inside the blog list anymore - the list on
@@ -50,32 +50,32 @@ const RemoveButton = styled.button`
 const Blog = ({ blog, handleLike, handleDelete, currentUser }) => {
   // useNavigate gives us a function to programmatically change the URL,
   // e.g. after an action completes. Used below after a successful delete.
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const likeBlog = () => {
-    handleLike(blog)
-  }
+    handleLike(blog);
+  };
 
   // Only the user who originally created this blog should see a delete
   // button. We compare usernames (not ids) because the logged-in `user`
   // object from login doesn't carry a mongo id, only username/name/token.
   const showDeleteButton = () => {
     if (!blog.user || !currentUser) {
-      return false
+      return false;
     }
-    return blog.user.username === currentUser.username
-  }
+    return blog.user.username === currentUser.username;
+  };
 
   const deleteBlog = () => {
     if (window.confirm(`Remove blog "${blog.title}" by ${blog.author}?`)) {
-      handleDelete(blog)
+      handleDelete(blog);
       // Redirect back to the blog list right after triggering the delete.
       // handleDelete is async and this call isn't awaited, so the redirect
       // fires while the DELETE request may still be in flight - that's
       // fine here since "/" doesn't depend on this specific blog existing.
-      navigate('/')
+      navigate('/');
     }
-  }
+  };
 
   // Guards against rendering before `blog` is resolved. This happens on a
   // hard refresh of a "/blogs/:id" URL: React Router matches the route
@@ -84,13 +84,17 @@ const Blog = ({ blog, handleLike, handleDelete, currentUser }) => {
   // for a moment. Returning null avoids trying to read blog.title etc. on
   // something that doesn't exist yet.
   if (!blog) {
-    return null
+    return null;
   }
 
   return (
     <Card>
-      <h2>{blog.title} by {blog.author}</h2>
-      <p><a href={blog.url}>{blog.url}</a></p>
+      <h2>
+        {blog.title} by {blog.author}
+      </h2>
+      <p>
+        <a href={blog.url}>{blog.url}</a>
+      </p>
       <LikeRow>
         likes {blog.likes}
         {/* Like button only shown to logged-in users (exercise 5.25
@@ -98,10 +102,8 @@ const Blog = ({ blog, handleLike, handleDelete, currentUser }) => {
         {currentUser && <LikeButton onClick={likeBlog}>like</LikeButton>}
       </LikeRow>
       <p>{blog.user ? blog.user.name : ''}</p>
-      {showDeleteButton() && (
-        <RemoveButton onClick={deleteBlog}>remove</RemoveButton>
-      )}
+      {showDeleteButton() && <RemoveButton onClick={deleteBlog}>remove</RemoveButton>}
     </Card>
-  )
-}
-export default Blog
+  );
+};
+export default Blog;

@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styled from 'styled-components';
 
 const Input = styled.input`
   margin: 0.25em 0.5em 0.25em 0;
@@ -8,7 +8,7 @@ const Input = styled.input`
   border: 1px solid #ccc;
   border-radius: 4px;
   width: 100%;
-`
+`;
 
 const Button = styled.button`
   background: #4a69bd;
@@ -23,37 +23,37 @@ const Button = styled.button`
   &:hover {
     background: #3c58a8;
   }
-`
+`;
 
 const FormWrapper = styled.div`
   background: #f4f4f4;
   padding: 1.5em;
   border-radius: 6px;
   max-width: 400px;
-`
+`;
 
 const FieldRow = styled.div`
   margin-bottom: 0.75em;
-`
+`;
 
 const BlogForm = ({ createBlog }) => {
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [url, setUrl] = useState('')
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [url, setUrl] = useState('');
 
-  const navigate = useNavigate()
-  const handleTitle = (event) => setTitle(event.target.value)
-  const handleAuthor = (event) => setAuthor(event.target.value)
-  const handleUrl = (event) => setUrl(event.target.value)
+  const navigate = useNavigate();
+  const handleTitle = (event) => setTitle(event.target.value);
+  const handleAuthor = (event) => setAuthor(event.target.value);
+  const handleUrl = (event) => setUrl(event.target.value);
 
   const addBlog = (event) => {
-    event.preventDefault()
-    createBlog({ title, author, url })
-    setTitle('')
-    setAuthor('')
-    setUrl('')
-    navigate('/')
-  }
+    event.preventDefault();
+    createBlog({ title, author, url });
+    setTitle('');
+    setAuthor('');
+    setUrl('');
+    navigate('/');
+  };
 
   return (
     <FormWrapper>
@@ -83,7 +83,7 @@ const BlogForm = ({ createBlog }) => {
         <Button type="submit">create</Button>
       </form>
     </FormWrapper>
-  )
-}
+  );
+};
 
-export default BlogForm
+export default BlogForm;

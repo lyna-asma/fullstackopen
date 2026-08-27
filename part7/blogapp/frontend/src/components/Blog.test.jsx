@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
-import Blog from './Blog'
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import Blog from './Blog';
 
 // Blog now calls useNavigate() internally (for the redirect-after-delete),
 // so every test has to render it inside SOME router - a real BrowserRouter
@@ -12,8 +12,8 @@ const renderBlog = (props) => {
     <MemoryRouter>
       <Blog {...props} />
     </MemoryRouter>
-  )
-}
+  );
+};
 
 const blog = {
   id: '1',
@@ -21,36 +21,36 @@ const blog = {
   author: 'Kent C. Dodds',
   url: 'http://example.com',
   likes: 5,
-  user: { username: 'creator', name: 'Creator Name' }
-}
+  user: { username: 'creator', name: 'Creator Name' },
+};
 
 test('blog info and likes are shown to unauthenticated users, no buttons', () => {
   // currentUser is undefined here - simulating a visitor who isn't logged in
-  renderBlog({ blog, handleLike: () => {}, handleDelete: () => {} })
+  renderBlog({ blog, handleLike: () => {}, handleDelete: () => {} });
 
-  screen.getByText('Component testing is done with react-testing-library', { exact: false })
-  screen.getByText('Kent C. Dodds', { exact: false })
-  screen.getByText('likes 5', { exact: false })
+  screen.getByText('Component testing is done with react-testing-library', { exact: false });
+  screen.getByText('Kent C. Dodds', { exact: false });
+  screen.getByText('likes 5', { exact: false });
 
   // Neither button should exist at all when there's no logged-in user
-  expect(screen.queryByText('like')).toBeNull()
-  expect(screen.queryByText('remove')).toBeNull()
-})
+  expect(screen.queryByText('like')).toBeNull();
+  expect(screen.queryByText('remove')).toBeNull();
+});
 
 test('logged-in users who are not the creator see only the like button', () => {
-  const currentUser = { username: 'someone-else' }
+  const currentUser = { username: 'someone-else' };
 
-  renderBlog({ blog, handleLike: () => {}, handleDelete: () => {}, currentUser })
+  renderBlog({ blog, handleLike: () => {}, handleDelete: () => {}, currentUser });
 
-  screen.getByText('like')
-  expect(screen.queryByText('remove')).toBeNull()
-})
+  screen.getByText('like');
+  expect(screen.queryByText('remove')).toBeNull();
+});
 
 test("the blog's creator also sees the delete button", () => {
-  const currentUser = { username: 'creator' }
+  const currentUser = { username: 'creator' };
 
-  renderBlog({ blog, handleLike: () => {}, handleDelete: () => {}, currentUser })
+  renderBlog({ blog, handleLike: () => {}, handleDelete: () => {}, currentUser });
 
-  screen.getByText('like')
-  screen.getByText('remove')
-})
+  screen.getByText('like');
+  screen.getByText('remove');
+});
