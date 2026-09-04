@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import styled from 'styled-components';
+import useField from "../hooks/useField";
+import styled from "styled-components";
 
 const Input = styled.input`
   margin: 0.25em 0.5em 0.25em 0;
@@ -34,17 +34,17 @@ const FieldRow = styled.div`
 `;
 
 const LoginForm = ({ handleLogin }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const usernameField = useField("text"); // <- the call happens HERE
+  const passwordField = useField("password");
 
-  const handleUsername = (event) => setUsername(event.target.value);
-  const handlePassword = (event) => setPassword(event.target.value);
+  const { reset: resetUsername, ...usernameInput } = usernameField;
+  const { reset: resetPassword, ...passwordInput } = passwordField;
 
   const onSubmit = async (event) => {
     event.preventDefault();
-    await handleLogin(username, password);
-    setUsername('');
-    setPassword('');
+    await handleLogin(usernameInput.value, passwordInput.value);
+    resetUsername();
+    resetPassword();
   };
 
   return (
@@ -55,14 +55,14 @@ const LoginForm = ({ handleLogin }) => {
           <label>
             username
             <br />
-            <Input value={username} onChange={handleUsername} name="username" />
+            <Input {...usernameInput}  name="username"/>
           </label>
         </FieldRow>
         <FieldRow>
           <label>
             password
             <br />
-            <Input value={password} onChange={handlePassword} name="password" type="password" />
+            <Input {...passwordInput} name="password" />
           </label>
         </FieldRow>
         <Button type="submit">login</Button>

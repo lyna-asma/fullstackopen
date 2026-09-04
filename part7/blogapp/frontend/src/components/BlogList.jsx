@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 // list to everyone, logged in or not. Auth-gating happens per-route in App
 // (e.g. "/create" redirects to "/login" if !user), not inside this list.
 const BlogList = ({ blogs }) => {
-  if (blogs.length === 1) throw new Error('simulated error');
+  //if (blogs.length === 0) throw new Error('empty bloglist ');
 
   return (
     <div>

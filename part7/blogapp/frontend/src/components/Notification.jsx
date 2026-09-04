@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import useNotificationStore from '../stores/notificationStore';
 
 const Box = styled.div`
   display: flex;
@@ -19,7 +20,8 @@ const Icon = styled.span`
   font-size: 1.1em;
 `;
 
-const Notification = ({ notification }) => {
+const Notification = () => {
+  const notification = useNotificationStore((state) => state.notification);
   if (notification === null) {
     return null;
   }

@@ -1,10 +1,11 @@
 const blogsRouter = require('express').Router();
 const Blog = require('../models/blog');
 const middleware = require('../utils/middleware');
+const Comment = require('../models/comment')
 
 // GET all blogs — public, no token needed
 blogsRouter.get('/', async (request, response) => {
-  const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 });
+  const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 }).populate('comments');
   response.json(blogs);
 });
 
@@ -79,4 +80,35 @@ blogsRouter.put('/:id', middleware.userExtractor, async (request, response) => {
   response.json(updatedBlog);
 });
 
+// POST /:id/comments
+// Find the blog by request.params.id.
+////Create a new Comment with content from the request body and blog set to the blog's id.
+//Save the comment.
+//Push the new comment's id into the blog's comments array and save the blog.
+//Respond with the created comment (201).
+blogsRouter.post('/:id/comments',  async (request, response) => {
+
+  const { content } = request.body;
+  const blogId = request.params.id;
+
+  if (!content) {
+    return response.status(400).json({ error: 'content missing' });
+  }
+  
+  const blog = await Blog.findById(blogId);
+  if (!blog) {
+    return response.status(404).json({ error: 'blog not found' });
+  }
+
+  const comment = new Comment({
+    content,
+    blog: blog._id,
+  });
+
+  const savedComment = await comment.save();
+  blog.comments = blog.comments.concat(savedComment._id);
+  await blog.save();
+
+  response.status(201).json(savedComment);
+}); 
 module.exports = blogsRouter;

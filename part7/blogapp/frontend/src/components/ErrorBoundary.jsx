@@ -8,8 +8,8 @@ const ErrorFallback = ({ error }) => (
   </div>
 );
 
-const ErrorBoundary = ({ children }) => (
-  <ReactErrorBoundary FallbackComponent={ErrorFallback}>{children}</ReactErrorBoundary>
+const ErrorBoundary = ({ children , ...props }) => (
+  <ReactErrorBoundary FallbackComponent={ErrorFallback} {...props}>{children}</ReactErrorBoundary>
 );
 
 export default ErrorBoundary;

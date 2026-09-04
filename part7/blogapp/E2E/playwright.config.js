@@ -28,11 +28,27 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'http://localhost:5174',
+    baseURL: 'http://localhost:5173',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
+
+  // i added this bcz i don t wanna mistake again and run the app in dev mode wich tets the files with dev DB and not test one
+  webServer: [
+  {
+    command: 'npm run start:test',
+    url: 'http://localhost:3003/api/blogs',
+    cwd: '../backend',       // path from where playwright.config.js lives to your backend folder
+    reuseExistingServer: false,
+  },
+  {
+    command: 'npm run dev',
+    url: 'http://localhost:5173',
+    cwd: '../frontend',                 // frontend folder, wherever the config file itself is
+    reuseExistingServer: false,
+  },
+],
 
   /* Configure projects for major browsers */
   projects: [
